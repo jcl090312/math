@@ -1,644 +1,521 @@
+
 import streamlit as st
 import numpy as np
 import pandas as pd
 import plotly.graph_objects as go
 
-# --------------------------------------------------
-# 기본 설정
-# --------------------------------------------------
-
+# ==========================================
+# 1. 페이지 설정
+# ==========================================
 st.set_page_config(
-    page_title="좌우 할선의 수렴과 미분가능성 탐구",
-    page_icon="📈",
+    page_title="세 할선과 미분계수 탐구",
+    page_icon="📐",
     layout="wide"
 )
 
-st.title("📈 좌우 할선의 수렴과 미분가능성 탐구")
-st.markdown(
-    """
-    **미적분Ⅰ의 평균변화율과 미분계수**를 바탕으로  
-    한 점에 왼쪽과 오른쪽에서 접근하는 두 점의 할선 기울기가
-    어떤 값으로 수렴하는지 관찰합니다.
-    """
-)
+st.title("📐 평균변화율과 미분계수의 관계 탐구")
+st.markdown("""
+### 수학 × 정보 융합 주제탐구
+
+**세 할선의 기울기 비교를 통한 평균변화율과 미분계수 분석**
+
+하나의 기준점에 세 개의 이동점을 연결하고,
+이동 거리 h에 따른 기울기 변화를 관찰합니다.
+""")
 
 st.divider()
 
-# --------------------------------------------------
-# 함수 정의
-# --------------------------------------------------
-
-functions = {
-    "이차함수 · x²": "x2",
-    "삼차함수 · x³": "x3",
-    "사차함수 · x⁴": "x4",
-    "복잡한 다항함수 · x⁴ - 2x³ - x² + 2x + 1": "poly",
-    "절댓값 함수 · |x|": "abs",
-    "구간으로 나뉜 함수": "piecewise"
-}
-
-selected_name = st.selectbox(
-    "탐구할 함수를 선택하세요.",
-    list(functions.keys())
-)
-
-selected_function = functions[selected_name]
-
-
-# --------------------------------------------------
-# 함수 계산
-# --------------------------------------------------
-
+# ==========================================
+# 2. 함수 및 미분계수
+# ==========================================
 def f(x):
-    if selected_function == "x2":
-        return x ** 2
+    return x ** 2
 
-    elif selected_function == "x3":
-        return x ** 3
+def derivative(x):
+    return 2 * x
 
-    elif selected_function == "x4":
-        return x ** 4
+def secant_slope(a, x):
+    return (f(x) - f(a)) / (x - a)
 
-    elif selected_function == "poly":
-        return x ** 4 - 2 * x ** 3 - x ** 2 + 2 * x + 1
-
-    elif selected_function == "abs":
-        return np.abs(x)
-
-    elif selected_function == "piecewise":
-        # x < 0 : x²
-        # x >= 0 : 2x²
-        return np.where(x < 0, x ** 2, 2 * x ** 2)
-
-
-# --------------------------------------------------
-# 함수 설명
-# --------------------------------------------------
-
-if selected_function == "x2":
-    st.info("선택한 함수: **f(x) = x²**")
-
-elif selected_function == "x3":
-    st.info("선택한 함수: **f(x) = x³**")
-
-elif selected_function == "x4":
-    st.info("선택한 함수: **f(x) = x⁴**")
-
-elif selected_function == "poly":
-    st.info(
-        "선택한 함수: **f(x) = x⁴ - 2x³ - x² + 2x + 1**"
-    )
-
-elif selected_function == "abs":
-    st.info("선택한 함수: **f(x) = |x|**")
-
-else:
-    st.info(
-        """
-        선택한 함수는 구간에 따라 식이 달라집니다.
-
-        **x < 0 : f(x) = x²**
-
-        **x ≥ 0 : f(x) = 2x²**
-        """
-    )
-
-
-# --------------------------------------------------
-# 조작 영역
-# --------------------------------------------------
-
-st.sidebar.header("⚙️ 탐구 조건")
-
-# 절댓값과 구간함수는 0에서 변화가 중요하므로
-# 기본값을 0으로 설정
-if selected_function in ["abs", "piecewise"]:
-    default_a = 0.0
-else:
-    default_a = 1.0
+# ==========================================
+# 3. 탐구 조건 설정
+# ==========================================
+st.sidebar.title("⚙️ 탐구 조건")
 
 a = st.sidebar.slider(
     "기준점 a",
-    min_value=-3.0,
-    max_value=3.0,
-    value=default_a,
-    step=0.1
+    -3.0, 3.0, 1.9, 0.1
 )
 
 h = st.sidebar.slider(
-    "접근 거리 h",
-    min_value=0.01,
-    max_value=2.0,
-    value=0.5,
-    step=0.01
+    "이동 거리 h",
+    0.01, 2.0, 0.5, 0.01
 )
 
-graph_range = st.sidebar.slider(
-    "그래프 범위",
-    min_value=3,
-    max_value=10,
-    value=5
+direction = st.sidebar.radio(
+    "이동 방향",
+    ["오른쪽 접근", "왼쪽 접근"]
 )
 
-
-# --------------------------------------------------
-# 점 계산
-# --------------------------------------------------
-
-# 기준점
-x_a = a
-y_a = f(np.array([a]))[0]
-
-# 왼쪽에서 접근하는 점
-x_left = a - h
-y_left = f(np.array([x_left]))[0]
-
-# 오른쪽에서 접근하는 점
-x_right = a + h
-y_right = f(np.array([x_right]))[0]
-
-
-# --------------------------------------------------
-# 좌우 할선의 기울기 계산
-# --------------------------------------------------
-
-left_slope = (y_a - y_left) / h
-right_slope = (y_right - y_a) / h
-
-slope_difference = abs(right_slope - left_slope)
-
-
-# --------------------------------------------------
-# 그래프
-# --------------------------------------------------
-
-x = np.linspace(
-    a - graph_range,
-    a + graph_range,
-    800
+show_tangent = st.sidebar.checkbox(
+    "접선 표시", True
 )
 
-y = f(x)
+show_points = st.sidebar.checkbox(
+    "이동점 표시", True
+)
+
+show_function = st.sidebar.checkbox(
+    "함수 그래프 표시", True
+)
+
+show_analysis = st.sidebar.checkbox(
+    "수학적 분석 표시", True
+)
+
+sign = 1 if direction == "오른쪽 접근" else -1
+
+# ==========================================
+# 4. 세 할선 계산
+# ==========================================
+multipliers = [1, 2, 3]
+
+point_x = [
+    a + sign * k * h for k in multipliers
+]
+
+point_y = [
+    f(x) for x in point_x
+]
+
+slopes = [
+    secant_slope(a, x) for x in point_x
+]
+
+true_slope = derivative(a)
+
+errors = [
+    abs(m - true_slope) for m in slopes
+]
+
+# ==========================================
+# 5. 핵심 결과
+# ==========================================
+st.header("1. 현재 탐구 결과")
+
+c1, c2, c3, c4 = st.columns(4)
+
+c1.metric("기준점 a", f"{a:.2f}")
+c2.metric("이동 거리 h", f"{h:.3f}")
+c3.metric("실제 미분계수", f"{true_slope:.4f}")
+c4.metric("평균 절대 오차", f"{np.mean(errors):.4f}")
+
+st.subheader("세 할선의 기울기")
+
+cols = st.columns(3)
+
+for i in range(3):
+    cols[i].metric(
+        f"{i+1}번째 할선",
+        f"{slopes[i]:.4f}",
+        delta=f"오차 {errors[i]:.4f}",
+        delta_color="inverse"
+    )
+
+# ==========================================
+# 6. 함수와 할선 그래프
+# ==========================================
+st.header("2. 세 할선과 접선의 시각화")
+
+xmin = min(-5, a - 3*h - 1)
+xmax = max(5, a + 3*h + 1)
+
+x = np.linspace(xmin, xmax, 500)
 
 fig = go.Figure()
 
 # 함수 그래프
-fig.add_trace(
-    go.Scatter(
+if show_function:
+    fig.add_trace(go.Scatter(
         x=x,
-        y=y,
+        y=f(x),
         mode="lines",
-        name="함수 그래프",
+        name="f(x) = x²",
         line=dict(width=3)
-    )
-)
+    ))
 
 # 기준점
-fig.add_trace(
-    go.Scatter(
-        x=[x_a],
-        y=[y_a],
-        mode="markers",
-        name="기준점 A",
-        marker=dict(size=12)
-    )
-)
+fig.add_trace(go.Scatter(
+    x=[a],
+    y=[f(a)],
+    mode="markers+text",
+    name="기준점 A",
+    text=["A"],
+    textposition="bottom center",
+    marker=dict(size=13)
+))
 
-# 왼쪽 접근점
-fig.add_trace(
-    go.Scatter(
-        x=[x_left],
-        y=[y_left],
-        mode="markers",
-        name="왼쪽 점",
-        marker=dict(size=10)
-    )
-)
+# 세 할선
+for i in range(3):
+    k = i + 1
+    px = point_x[i]
+    py = point_y[i]
+    slope = slopes[i]
 
-# 오른쪽 접근점
-fig.add_trace(
-    go.Scatter(
-        x=[x_right],
-        y=[y_right],
-        mode="markers",
-        name="오른쪽 점",
-        marker=dict(size=10)
+    line_x = np.linspace(
+        min(a, px),
+        max(a, px),
+        100
     )
-)
 
-# 왼쪽 할선
-fig.add_trace(
-    go.Scatter(
-        x=[x_left, x_a],
-        y=[y_left, y_a],
+    line_y = f(a) + slope * (line_x - a)
+
+    fig.add_trace(go.Scatter(
+        x=line_x,
+        y=line_y,
         mode="lines",
-        name="왼쪽 할선",
-        line=dict(dash="dash", width=3)
-    )
-)
+        name=f"{k}번째 할선",
+        line=dict(width=2, dash="dash")
+    ))
 
-# 오른쪽 할선
-fig.add_trace(
-    go.Scatter(
-        x=[x_a, x_right],
-        y=[y_a, y_right],
+    # 이동점
+    if show_points:
+        fig.add_trace(go.Scatter(
+            x=[px],
+            y=[py],
+            mode="markers+text",
+            name=f"{k}번째 이동점",
+            text=[["B", "C", "D"][i]],
+            textposition="top center",
+            marker=dict(size=11)
+        ))
+
+# 접선
+if show_tangent:
+    tangent_y = f(a) + true_slope * (x - a)
+
+    fig.add_trace(go.Scatter(
+        x=x,
+        y=tangent_y,
         mode="lines",
-        name="오른쪽 할선",
-        line=dict(dash="dot", width=3)
-    )
-)
+        name="접선",
+        line=dict(width=3, dash="dot")
+    ))
 
 fig.update_layout(
-    title="기준점에 접근하는 두 할선",
     xaxis_title="x",
     yaxis_title="f(x)",
     height=600,
-    hovermode="closest"
+    hovermode="closest",
+    legend=dict(
+        orientation="h",
+        y=-0.2
+    )
 )
 
 st.plotly_chart(fig, use_container_width=True)
 
-
-# --------------------------------------------------
-# 현재 값 표시
-# --------------------------------------------------
-
-st.subheader("📊 현재 탐구 결과")
-
-col1, col2, col3, col4 = st.columns(4)
-
-with col1:
-    st.metric(
-        "왼쪽 할선의 기울기",
-        f"{left_slope:.6f}"
-    )
-
-with col2:
-    st.metric(
-        "오른쪽 할선의 기울기",
-        f"{right_slope:.6f}"
-    )
-
-with col3:
-    st.metric(
-        "두 기울기의 차이",
-        f"{slope_difference:.6f}"
-    )
-
-with col4:
-    if slope_difference < 0.001:
-        status = "거의 일치"
-    elif slope_difference < 0.1:
-        status = "가까워지는 중"
-    else:
-        status = "차이가 있음"
-
-    st.metric(
-        "수렴 상태",
-        status
-    )
-
-
-# --------------------------------------------------
-# 수학적 설명
-# --------------------------------------------------
-
-st.divider()
-
-st.subheader("📐 두 할선의 기울기는 어떻게 계산할까?")
-
-st.markdown(
-    f"""
-    기준점은
-
-    **A = ({a:.2f}, f({a:.2f}))**
-
-    입니다.
-
-    기준점의 왼쪽에 있는 점은 **x = a - h**,
-    오른쪽에 있는 점은 **x = a + h**입니다.
-
-    따라서 평균변화율을 이용하면 두 할선의 기울기를 각각 계산할 수 있습니다.
-    """
+st.caption(
+    "그래프에서 세 할선은 모두 동일한 기준점 A를 지나며, "
+    "각각 다른 이동점과 연결됩니다."
 )
+
+# ==========================================
+# 7. 현재 기울기 상세 분석
+# ==========================================
+st.header("3. 세 할선의 상세 분석")
+
+current_data = []
+
+for i in range(3):
+    k = i + 1
+
+    current_data.append({
+        "할선": f"{k}번째",
+        "기준점 x": a,
+        "이동점 x": point_x[i],
+        "이동점 y": point_y[i],
+        "이동 거리": k * h,
+        "평균변화율": slopes[i],
+        "미분계수": true_slope,
+        "절대 오차": errors[i]
+    })
+
+current_df = pd.DataFrame(current_data)
+
+st.dataframe(
+    current_df.round(5),
+    use_container_width=True,
+    hide_index=True
+)
+
+# ==========================================
+# 8. h 변화에 따른 수렴 분석
+# ==========================================
+st.header("4. 이동 거리 h에 따른 수렴 분석")
+
+st.markdown("""
+현재 기준점을 고정한 상태에서 이동 거리 h를
+점점 작게 만들면 세 할선의 기울기가 어떻게 변할까요?
+""")
+
+h_values = [
+    h,
+    h / 2,
+    h / 4,
+    h / 8,
+    h / 16,
+    h / 32,
+    h / 64
+]
+
+experiment_data = []
+
+for current_h in h_values:
+
+    row = {"h": current_h}
+
+    for k in multipliers:
+
+        px = a + sign * k * current_h
+        slope = secant_slope(a, px)
+
+        row[f"{k}번째 기울기"] = slope
+        row[f"{k}번째 오차"] = abs(
+            slope - true_slope
+        )
+
+    experiment_data.append(row)
+
+experiment_df = pd.DataFrame(experiment_data)
+
+st.dataframe(
+    experiment_df.round(6),
+    use_container_width=True,
+    hide_index=True
+)
+
+# ==========================================
+# 9. 기울기 변화 그래프
+# ==========================================
+st.header("5. h에 따른 할선의 기울기 변화")
+
+slope_fig = go.Figure()
+
+for k in multipliers:
+
+    values = []
+
+    for current_h in h_values:
+        px = a + sign * k * current_h
+        values.append(secant_slope(a, px))
+
+    slope_fig.add_trace(go.Scatter(
+        x=h_values,
+        y=values,
+        mode="lines+markers",
+        name=f"{k}번째 할선"
+    ))
+
+slope_fig.add_hline(
+    y=true_slope,
+    line_dash="dash",
+    annotation_text="실제 미분계수"
+)
+
+slope_fig.update_layout(
+    xaxis_title="이동 거리 h",
+    yaxis_title="할선의 기울기",
+    height=450,
+    xaxis=dict(autorange="reversed")
+)
+
+st.plotly_chart(
+    slope_fig,
+    use_container_width=True
+)
+
+# ==========================================
+# 10. 오차 변화 그래프
+# ==========================================
+st.header("6. 미분계수와의 오차 변화")
+
+error_fig = go.Figure()
+
+for k in multipliers:
+
+    values = [
+        k * current_h for current_h in h_values
+    ]
+
+    error_fig.add_trace(go.Scatter(
+        x=h_values,
+        y=values,
+        mode="lines+markers",
+        name=f"{k}번째 할선 오차"
+    ))
+
+error_fig.update_layout(
+    xaxis_title="이동 거리 h",
+    yaxis_title="절대 오차",
+    height=450,
+    xaxis=dict(autorange="reversed")
+)
+
+st.plotly_chart(
+    error_fig,
+    use_container_width=True
+)
+
+# ==========================================
+# 11. 세 할선 사이의 기울기 차이
+# ==========================================
+st.header("7. 세 할선의 기울기 차이")
+
+difference_data = {
+    "비교": [
+        "1번과 2번",
+        "2번과 3번",
+        "1번과 3번"
+    ],
+    "기울기 차이": [
+        abs(slopes[0] - slopes[1]),
+        abs(slopes[1] - slopes[2]),
+        abs(slopes[0] - slopes[2])
+    ]
+}
+
+difference_df = pd.DataFrame(difference_data)
+
+st.dataframe(
+    difference_df.round(6),
+    use_container_width=True,
+    hide_index=True
+)
+
+st.markdown(f"""
+현재 세 할선의 기울기 차이는 다음과 같습니다.
+
+- 첫 번째와 두 번째: {abs(slopes[0]-slopes[1]):.4f}
+- 두 번째와 세 번째: {abs(slopes[1]-slopes[2]):.4f}
+- 첫 번째와 세 번째: {abs(slopes[0]-slopes[2]):.4f}
+
+이동 거리 h가 작아지면 세 할선 사이의 기울기 차이도 작아집니다.
+""")
+
+# ==========================================
+# 12. 자동 수학적 해석
+# ==========================================
+if show_analysis:
+
+    st.header("8. 수학적 분석")
+
+    st.markdown(f"""
+    ### 현재 탐구 조건
+
+    - 함수: f(x) = x²
+    - 기준점: a = {a:.2f}
+    - 이동 거리: h = {h:.3f}
+    - 접근 방향: {direction}
+
+    ### 실제 미분계수
+
+    f'(a) = 2a = **{true_slope:.4f}**
+
+    ### 세 할선의 기울기
+
+    | 할선 | 계산된 기울기 | 절대 오차 |
+    |---|---:|---:|
+    | 첫 번째 | {slopes[0]:.4f} | {errors[0]:.4f} |
+    | 두 번째 | {slopes[1]:.4f} | {errors[1]:.4f} |
+    | 세 번째 | {slopes[2]:.4f} | {errors[2]:.4f} |
+
+    ### 분석 결과
+
+    {direction}을 선택했을 때 세 할선의 기울기는
+    각각 {slopes[0]:.4f}, {slopes[1]:.4f}, {slopes[2]:.4f}입니다.
+
+    세 할선의 기울기는 서로 다르지만,
+    h가 작아질수록 실제 미분계수 {true_slope:.4f}에 가까워집니다.
+
+    또한 세 번째 할선은 첫 번째 할선보다 이동 거리가
+    세 배 크기 때문에 미분계수와의 오차도 세 배 크게 나타납니다.
+    """)
+
+    st.markdown("""
+    ### 수학적 원리 확인
+
+    함수 f(x) = x²에서 세 할선의 기울기는 다음과 같습니다.
+
+    첫 번째: 2a + sh
+
+    두 번째: 2a + 2sh
+
+    세 번째: 2a + 3sh
+
+    여기서 s는 접근 방향을 나타내며,
+    오른쪽 접근은 1, 왼쪽 접근은 -1입니다.
+
+    따라서 h가 0에 가까워지면 세 기울기가
+    모두 2a에 가까워집니다.
+    """)
+
+# ==========================================
+# 13. 탐구 결론
+# ==========================================
+st.header("9. 탐구 결론")
+
+st.markdown("""
+이번 탐구에서는 하나의 기준점에 세 개의 이동점을 설정하고,
+각 이동점을 연결한 할선의 기울기를 비교했습니다.
+
+그 결과 이동 거리 h가 작아질수록 세 할선의 기울기와
+실제 미분계수 사이의 차이가 감소한다는 사실을 확인했습니다.
+
+특히 서로 다른 위치에 있는 세 이동점이 같은 기준점에
+접근하면서 세 할선의 기울기가 하나의 접선 기울기에
+가까워진다는 점을 확인할 수 있었습니다.
+
+이를 통해 평균변화율과 미분계수의 관계를
+계산뿐만 아니라 그래프와 데이터로 분석할 수 있었습니다.
+""")
+
+# ==========================================
+# 14. CSV 데이터 다운로드
+# ==========================================
+st.header("10. 탐구 데이터 다운로드")
+
+csv1 = current_df.to_csv(
+    index=False
+).encode("utf-8-sig")
+
+csv2 = experiment_df.to_csv(
+    index=False
+).encode("utf-8-sig")
 
 col1, col2 = st.columns(2)
 
 with col1:
-    st.markdown("### ◀ 왼쪽 할선")
-    st.latex(
-        r"""
-        m_L =
-        \frac{f(a)-f(a-h)}{h}
-        """
+    st.download_button(
+        "📥 현재 할선 분석 다운로드",
+        data=csv1,
+        file_name="current_secants.csv",
+        mime="text/csv",
+        use_container_width=True
     )
-    st.write(f"현재 값: **{left_slope:.6f}**")
 
 with col2:
-    st.markdown("### 오른쪽 할선 ▶")
-    st.latex(
-        r"""
-        m_R =
-        \frac{f(a+h)-f(a)}{h}
-        """
+    st.download_button(
+        "📥 수렴 분석 데이터 다운로드",
+        data=csv2,
+        file_name="convergence_analysis.csv",
+        mime="text/csv",
+        use_container_width=True
     )
-    st.write(f"현재 값: **{right_slope:.6f}**")
-
-
-# --------------------------------------------------
-# h를 점점 작게 만드는 실험
-# --------------------------------------------------
 
 st.divider()
-
-st.subheader("🔬 h를 점점 0에 가깝게 만들면 어떻게 될까?")
-
-st.write(
-    """
-    이제 기준점은 그대로 유지하고 두 점이 기준점에 점점 가까워지도록
-    **h의 값을 작게 하면서 왼쪽과 오른쪽 할선의 기울기를 비교합니다.**
-    """
-)
-
-h_values = [
-    1,
-    0.5,
-    0.2,
-    0.1,
-    0.05,
-    0.02,
-    0.01
-]
-
-results = []
-
-for h_value in h_values:
-
-    left_x = a - h_value
-    right_x = a + h_value
-
-    left_y = f(np.array([left_x]))[0]
-    right_y = f(np.array([right_x]))[0]
-
-    left_m = (y_a - left_y) / h_value
-    right_m = (right_y - y_a) / h_value
-
-    difference = abs(right_m - left_m)
-
-    results.append(
-        {
-            "h": h_value,
-            "왼쪽 할선 기울기": left_m,
-            "오른쪽 할선 기울기": right_m,
-            "두 기울기의 차이": difference
-        }
-    )
-
-result_df = pd.DataFrame(results)
-
-st.dataframe(
-    result_df.style.format(
-        {
-            "h": "{:.3f}",
-            "왼쪽 할선 기울기": "{:.6f}",
-            "오른쪽 할선 기울기": "{:.6f}",
-            "두 기울기의 차이": "{:.6f}"
-        }
-    ),
-    use_container_width=True
-)
-
-
-# --------------------------------------------------
-# 수렴 그래프
-# --------------------------------------------------
-
-st.subheader("📉 h에 따른 좌우 할선 기울기의 변화")
-
-fig2 = go.Figure()
-
-fig2.add_trace(
-    go.Scatter(
-        x=result_df["h"],
-        y=result_df["왼쪽 할선 기울기"],
-        mode="lines+markers",
-        name="왼쪽 할선"
-    )
-)
-
-fig2.add_trace(
-    go.Scatter(
-        x=result_df["h"],
-        y=result_df["오른쪽 할선 기울기"],
-        mode="lines+markers",
-        name="오른쪽 할선"
-    )
-)
-
-fig2.update_layout(
-    title="h가 작아질수록 두 할선의 기울기는 어떻게 변하는가?",
-    xaxis_title="h",
-    yaxis_title="할선의 기울기",
-    height=500
-)
-
-# h가 큰 값에서 작은 값으로 보이도록 역순
-fig2.update_xaxes(autorange="reversed")
-
-st.plotly_chart(fig2, use_container_width=True)
-
-
-# --------------------------------------------------
-# 자동 분석
-# --------------------------------------------------
-
-st.divider()
-
-st.subheader("🧠 탐구 결과 해석")
-
-final_left = result_df.iloc[-1]["왼쪽 할선 기울기"]
-final_right = result_df.iloc[-1]["오른쪽 할선 기울기"]
-final_difference = result_df.iloc[-1]["두 기울기의 차이"]
-
-
-if final_difference < 0.001:
-
-    st.success(
-        f"""
-        h를 0에 가깝게 줄였을 때 왼쪽 할선의 기울기는
-        **{final_left:.6f}**, 오른쪽 할선의 기울기는
-        **{final_right:.6f}**으로 서로 매우 가까워졌습니다.
-
-        따라서 이 실험에서는 두 방향에서 접근한 평균변화율이
-        **하나의 값에 가까워지는 현상**을 관찰할 수 있습니다.
-        """
-    )
-
-else:
-
-    st.warning(
-        f"""
-        h를 0에 가깝게 줄였을 때에도 왼쪽 할선의 기울기는
-        **{final_left:.6f}**, 오른쪽 할선의 기울기는
-        **{final_right:.6f}**으로 차이가 남아 있습니다.
-
-        따라서 이 실험에서는 두 방향에서 접근한 평균변화율이
-        **하나의 값으로 모이지 않는 현상**을 관찰할 수 있습니다.
-        """
-    )
-
-
-# --------------------------------------------------
-# 함수별 탐구 포인트
-# --------------------------------------------------
-
-st.divider()
-
-st.subheader("🔎 이 함수에서 무엇을 관찰할까?")
-
-if selected_function == "x2":
-
-    st.markdown(
-        """
-        **이차함수에서는**
-
-        기준점에 가까워질수록 왼쪽과 오른쪽 할선의 기울기가
-        하나의 값에 가까워지는 모습을 관찰할 수 있습니다.
-
-        이를 통해 곡선 위의 한 점에서 접선의 기울기를 생각할 때
-        평균변화율을 이용할 수 있다는 점을 확인할 수 있습니다.
-        """
-    )
-
-elif selected_function == "x3":
-
-    st.markdown(
-        """
-        **삼차함수에서는**
-
-        이차함수와 비교하여 함수의 모양은 더 복잡하지만,
-        한 점에 가까이 접근했을 때 좌우 할선의 기울기가 어떻게
-        변화하는지 관찰할 수 있습니다.
-
-        함수의 차수가 달라져도 같은 탐구 방법을 적용할 수 있다는 점이
-        중요한 관찰 대상입니다.
-        """
-    )
-
-elif selected_function == "x4":
-
-    st.markdown(
-        """
-        **사차함수에서는**
-
-        그래프의 모양이 더욱 복잡해지지만,
-        평균변화율을 이용하여 좌우에서 접근하는 두 할선의 기울기를
-        비교할 수 있습니다.
-
-        이를 통해 함수의 복잡성과 관계없이 같은 수학적 탐구 방법을
-        적용할 수 있는지 확인할 수 있습니다.
-        """
-    )
-
-elif selected_function == "poly":
-
-    st.markdown(
-        """
-        **복잡한 다항함수에서는**
-
-        단순한 x², x³, x⁴보다 그래프의 형태가 복잡해집니다.
-
-        그러나 기준점을 정하고 h를 감소시키면서 좌우 할선의 기울기를
-        비교하는 방법은 동일하게 적용할 수 있습니다.
-
-        따라서 함수의 식이 복잡해져도 평균변화율과 미분계수의 관계를
-        관찰할 수 있는지 탐구할 수 있습니다.
-        """
-    )
-
-elif selected_function == "abs":
-
-    st.markdown(
-        """
-        **절댓값 함수에서는 특히 중요한 현상을 관찰할 수 있습니다.**
-
-        기준점을 0으로 설정하면 왼쪽에서 접근할 때와 오른쪽에서
-        접근할 때 할선의 기울기가 서로 다르게 나타납니다.
-
-        따라서 두 방향의 평균변화율이 하나의 값으로 모이는지 확인하는
-        것이 핵심적인 탐구 대상입니다.
-        """
-    )
-
-else:
-
-    st.markdown(
-        """
-        **구간으로 나뉜 함수에서는**
-
-        기준점의 위치에 따라 함수의 식이 달라질 수 있습니다.
-
-        특히 두 구간이 만나는 지점을 기준점으로 설정했을 때
-        왼쪽과 오른쪽에서 접근하는 할선의 기울기를 비교하면
-        구간이 바뀌는 지점에서 어떤 현상이 나타나는지 관찰할 수 있습니다.
-        """
-    )
-
-
-# --------------------------------------------------
-# 프로젝트의 핵심 질문
-# --------------------------------------------------
-
-st.divider()
-
-st.subheader("🎯 이 탐구의 핵심 질문")
-
-st.markdown(
-    """
-    ### 질문 1
-    **h를 0에 가깝게 만들면 왼쪽과 오른쪽 할선의 기울기는
-    항상 같은 값에 가까워질까?**
-
-    ### 질문 2
-    **함수의 종류가 달라져도 이러한 현상이 나타날까?**
-
-    ### 질문 3
-    **두 방향에서 접근한 할선의 기울기가 서로 다르게 나타나는
-    함수에서는 어떤 특징이 있을까?**
-
-    ### 질문 4
-    **평균변화율을 반복적으로 관찰하는 과정을 통해
-    미분계수의 의미를 어떻게 이해할 수 있을까?**
-    """
-)
-
-
-# --------------------------------------------------
-# 교육적 의미
-# --------------------------------------------------
-
-st.divider()
-
-st.subheader("📚 수학교육과와 연결되는 의미")
-
-st.markdown(
-    """
-    이 프로그램은 단순히 미분계수를 계산하는 것이 아니라,
-    **평균변화율이 어떻게 미분계수로 연결되는지를 시각적으로
-    관찰하는 것**을 목적으로 합니다.
-
-    특히 하나의 함수만 사용하는 것이 아니라 이차함수, 삼차함수,
-    사차함수, 복잡한 다항함수, 절댓값 함수, 구간함수를 비교함으로써
-    함수의 형태에 따라 좌우 할선의 변화가 어떻게 달라지는지
-    직접 확인할 수 있습니다.
-
-    이러한 방식은 수학 개념을 공식만으로 학습하는 것이 아니라
-    **그래프 → 수치 변화 → 규칙 발견 → 수학적 해석**의 과정으로
-    연결할 수 있다는 점에서 수학교육과 관련된 탐구로 발전시킬 수 있습니다.
-    """
-)
 
 st.caption(
-    "※ 이 프로그램의 수치 실험은 유한한 h를 사용하므로, "
-    "수렴 여부는 실험값을 통해 관찰하는 방식으로 해석합니다."
+    "미적분Ⅰ × 정보 융합 프로젝트 | "
+    "평균변화율과 미분계수의 관계 탐구"
 )
