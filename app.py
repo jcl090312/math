@@ -157,7 +157,7 @@ h3 { font-size: 16px; font-weight: 720; letter-spacing: -.3px; }
 
 .workspace { display: grid; grid-template-columns: 292px minmax(0, 1fr); align-items: start; gap: 22px; }
 .controls, .main-column { min-width: 0; }
-.main-column { display: flex; flex-direction: column; gap: 18px; }
+.main-column { display: flex; flex-direction: column; gap: 18px; container: experiment / inline-size; }
 .panel { background: var(--paper); border: 1px solid var(--line); border-radius: var(--radius); box-shadow: var(--shadow); }
 .control-panel { padding: 22px; }
 .panel-heading { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 16px; }
@@ -290,6 +290,27 @@ input[type="range"] { width: 100%; accent-color: var(--teal); cursor: pointer; }
 .toggle-row input { width: 15px; height: 15px; flex: 0 0 15px; margin: 0; accent-color: var(--teal); }
 .toggle-row:has(input:disabled) { opacity: .53; cursor: not-allowed; }
 .tiny-note { margin-top: 10px; color: #7c8a92; font-size: 10px; line-height: 1.8; word-break: keep-all; }
+.auto-observe { display: grid; gap: 9px; margin-top: 19px; padding-top: 17px; border-top: 1px solid #e9edeb; }
+.experiment-state { color: #405e68; font-size: 13px; font-weight: 650; line-height: 1.65; text-align: center; font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+.auto-play { min-height: 48px; padding: 12px 10px; font-size: 14px; font-weight: 750; letter-spacing: -.2px; }
+.auto-observe .btn-secondary { min-height: 40px; }
+.animation-status { min-height: 34px; color: #70877d; font-size: 11px; line-height: 1.6; text-align: center; word-break: keep-all; }
+.animation-status:empty { min-height: 0; }
+.manual-controls { margin-top: 15px; border: 1px solid #e1e8e3; border-radius: 10px; background: #fbfcfa; }
+.manual-controls > summary { display: flex; align-items: center; gap: 8px; list-style: none; padding: 12px; color: #587064; font-size: 11px; font-weight: 650; cursor: pointer; line-height: 1.6; }
+.manual-controls > summary::-webkit-details-marker { display: none; }
+.manual-controls > summary::after { content: "⌄"; font-size: 15px; line-height: 1; color: #91a497; }
+.manual-controls[open] > summary { border-bottom: 1px solid #e5ece6; }
+.manual-controls[open] > summary::after { content: "⌃"; }
+.manual-summary-hint { margin-left: auto; color: #94a198; font-size: 9px; font-weight: 400; }
+.manual-controls-body { padding: 14px 12px; }
+.manual-controls-body .field-row { gap: 9px; margin-bottom: 8px; }
+.manual-controls-body .number-input { width: 104px; max-width: 48%; }
+.manual-controls-body .field-label { font-size: 11px; }
+.manual-controls-body .field-label small { font-size: 9px; }
+.manual-controls-body > .btn { width: 100%; }
+.manual-controls-body .h-field { margin-top: 16px; }
+.manual-controls-body .tiny-note { margin-top: 11px; font-size: 10px; }
 
 .graph-panel { overflow: hidden; }
 .graph-toolbar { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 20px 24px 13px; }
@@ -316,6 +337,8 @@ input[type="range"] { width: 100%; accent-color: var(--teal); cursor: pointer; }
 #main-graph, #graph { touch-action: none; }
 .graph-tip { display: flex; align-items: flex-start; gap: 8px; margin: 0 24px; padding: 10px 0 14px; color: #7a8893; font-size: 11px; line-height: 1.7; word-break: keep-all; }
 .graph-tip svg { width: 14px; height: 14px; flex: 0 0 14px; margin-top: 2px; color: #8c9d9a; }
+.tangent-status { margin: 0 24px 14px; padding: 8px 10px; border-radius: 7px; background: #f4f7fa; color: #5c7385; font-size: 11px; line-height: 1.7; word-break: keep-all; }
+.tangent-status:empty { display: none; }
 .coordinate-row { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0; padding: 13px 20px; border-top: 1px solid #e9eeeb; background: #fcfdfc; }
 .coordinate-row > * { min-width: 0; display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 4px 8px; padding: 0 8px; color: #71808c; font-size: 10px; font-variant-numeric: tabular-nums; }
 .coordinate-row > * + * { border-left: 1px solid #e5ebe8; }
@@ -330,7 +353,7 @@ input[type="range"] { width: 100%; accent-color: var(--teal); cursor: pointer; }
 .secant-path { fill: none; stroke: var(--purple); stroke-width: 3; stroke-linecap: round; }
 .left-path { fill: none; stroke: var(--green); stroke-width: 2.1; stroke-dasharray: 6 4; stroke-linecap: round; }
 .right-path { fill: none; stroke: var(--coral); stroke-width: 2.1; stroke-dasharray: 6 4; stroke-linecap: round; }
-.tangent-path { fill: none; stroke: #263f5a; stroke-width: 1.9; stroke-dasharray: 8 5; opacity: .78; }
+.tangent-path { fill: none; stroke: #263f5a; stroke-width: 2.4; stroke-dasharray: 8 5; opacity: .78; }
 .guide-line { fill: none; stroke: #cbd6de; stroke-width: 1; stroke-dasharray: 4 5; }
 .graph-point { cursor: grab; touch-action: none; outline: none; }
 .point-dragging, .point-dragging .graph-point, .graph-point.dragging { cursor: grabbing; }
@@ -349,14 +372,31 @@ circle.point-core { fill: var(--point-color, #182d45); stroke: #fff; stroke-widt
 .metrics-heading h2 { font-size: 14px; letter-spacing: -.3px; }
 .metrics-heading > span { color: #8a979e; font-size: 10px; }
 .metric-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
-.metric { position: relative; min-width: 0; overflow: hidden; padding: 17px 18px 16px; border: 1px solid var(--line); border-radius: 13px; background: #fff; box-shadow: var(--shadow); }
+.metric { position: relative; min-width: 0; padding: 17px 18px 16px; border: 1px solid var(--line); border-radius: 13px; background: #fff; box-shadow: var(--shadow); container-type: inline-size; }
 .metric::before { position: absolute; content: ""; left: 0; right: 0; top: 0; height: 3px; background: var(--metric-color, #c4d0d4); }
 .metric-left { --metric-color: var(--green); }
 .metric-right { --metric-color: var(--coral); }
 .metric-symmetric { --metric-color: var(--purple); background: #fcfaff; }
 .metric-label { display: flex; align-items: center; gap: 6px; color: #6f7e8a; font-size: 11px; font-weight: 600; }
-.metric-number { display: block; margin-top: 6px; font-size: clamp(21px, 2.15vw, 29px); line-height: 1.35; letter-spacing: -.8px; font-weight: 740; color: var(--metric-color, var(--ink)); font-variant-numeric: tabular-nums; }
-.metric-formula { display: block; margin-top: 6px; color: #919aa4; font-size: 10px; line-height: 1.5; font-family: Georgia, "Times New Roman", serif; white-space: nowrap; }
+.metric-number { display: block; margin-top: 11px; color: var(--metric-color, var(--ink)); font-size: 27px; font-weight: 740; line-height: 1.4; letter-spacing: -.5px; font-variant-numeric: tabular-nums; white-space: nowrap; overflow-wrap: normal; word-break: normal; }
+.metric-number.is-long { font-family: ui-monospace, "SFMono-Regular", Consolas, "Liberation Mono", monospace; font-size: clamp(16px, 6.4cqi, 21px); font-weight: 650; letter-spacing: -.2px; }
+.metric-formula { display: flex; align-items: center; gap: 7px; min-height: 61px; margin-top: 10px; color: var(--metric-color, var(--ink)); font-family: Georgia, "Times New Roman", serif; font-size: 19px; line-height: 1.5; white-space: nowrap; }
+.math-symbol { font-size: 21px; font-weight: 600; }
+.math-equals { opacity: .7; }
+.metric-formula .metric-fraction { font-size: 17px; font-weight: 500; }
+.metric-fraction > span { white-space: nowrap; }
+.metric-formula .metric-fraction > span:first-child { padding: 0 3px 3px; border-bottom-color: currentColor; }
+.metric-formula .metric-fraction > span:last-child { font-size: 18px; }
+.metric-value-note { margin-top: 5px; color: #8b97a0; font-size: 10px; line-height: 1.7; word-break: keep-all; }
+.metric-value-note:empty { display: none; }
+.slope-relation { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 7px 22px; margin-top: 13px; padding: 17px 20px; border: 1px solid #e4ddef; border-radius: 12px; background: #f8f5fc; }
+.slope-relation h2, .slope-relation h3 { font-size: 14px; color: #665380; letter-spacing: -.4px; }
+.slope-relation > .theory-formula { grid-column: 2; grid-row: 1 / span 2; color: #74549c; font-size: 25px; }
+.slope-relation .fraction { font-size: 22px; }
+.slope-relation .fraction > span:last-child { font-size: 21px; }
+.slope-relation > p { color: #8d819e; font-size: 11px; line-height: 1.8; word-break: keep-all; }
+.reading-guide { margin-top: 10px; padding: 11px 14px; border-left: 3px solid #d0dddb; background: #eff5f3; border-radius: 0 8px 8px 0; color: #657f75; font-size: 12px; line-height: 1.85; word-break: keep-all; }
+.reading-guide:empty { display: none; }
 
 .insight-panel { display: grid; grid-template-columns: minmax(0, 1fr) auto; grid-template-areas: "title limits" "copy limits" "note note"; column-gap: 22px; row-gap: 9px; padding: 20px 22px; border: 1px solid #d9e9e2; border-radius: 14px; background: #f0f8f4; }
 .insight-panel[data-kind="warning"], .insight-panel.warning { border-color: #eddec2; background: #fff8e9; }
@@ -404,19 +444,12 @@ tbody tr:hover { background: #f2f8f5; }
 td:last-child { color: var(--purple); font-weight: 600; }
 .data-panel .tiny-note { margin-top: 9px; }
 
-.theory-strip { display: flex; align-items: center; gap: 32px; margin-top: 22px; padding: 23px 28px; border: 1px solid #dde6e0; border-radius: 14px; background: #eef3ef; }
-.theory-strip > div:first-child { flex: 0 1 285px; }
-.theory-strip .section-kicker { font-size: 9px; letter-spacing: .6px; margin-bottom: 5px; }
-.theory-strip h2 { font-size: 14px; color: #385f50; }
-.theory-formula { display: flex; align-items: center; gap: 10px; }
-.theory-formula > span:not(.fraction) { color: #8da598; }
+/* Fraction notation is shared by the three cards and their relationship. */
+.theory-formula { display: flex; align-items: center; gap: 10px; color: #74549c; font-family: Georgia, "Times New Roman", serif; font-size: 25px; font-weight: 600; letter-spacing: -.4px; line-height: 1.4; white-space: nowrap; }
+.theory-formula > span:nth-child(2) { opacity: .65; }
 .fraction { display: inline-flex; flex-direction: column; align-items: center; text-align: center; vertical-align: middle; font-size: 18px; line-height: 1.6; }
-.fraction > span:first-child { padding: 0 6px 3px; border-bottom: 1px solid #80a18c; }
+.fraction > span:first-child { padding: 0 6px 3px; border-bottom: 1px solid currentColor; }
 .fraction > span:last-child { padding-top: 2px; font-size: 17px; }
-.theory-strip > strong, .theory-strip > .formula, .theory-strip .theory-formula { color: #496e5f; font-size: 23px; font-weight: 600; letter-spacing: -.6px; white-space: nowrap; font-family: Georgia, "Times New Roman", serif; }
-.theory-strip h3 { font-size: 13px; margin-bottom: 5px; color: #385f50; }
-.theory-strip p { color: #72887c; font-size: 11px; line-height: 1.9; word-break: keep-all; }
-.theory-strip p strong { color: #476b5b; font-weight: 650; }
 .notes-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 22px; margin-top: 22px; }
 .notes-grid > .panel { padding: 23px 24px; min-width: 0; }
 .question-list { margin-top: 16px; }
@@ -455,11 +488,8 @@ textarea::placeholder { color: #a0aaa8; }
   .graph-toolbar { padding: 18px 18px 12px; }
   .graph-panel > .legend { padding-inline: 18px; }
   .graph-tip { margin-inline: 18px; }
+  .tangent-status { margin-inline: 18px; }
   .graph-stage { min-height: 0; }
-  .metric-grid { gap: 9px; }
-  .metric { padding: 15px 13px; }
-  .metric-label { font-size: 10px; }
-  .metric-formula { font-size: 9px; }
   .insight-panel { grid-template-columns: 1fr; grid-template-areas: "title" "copy" "limits" "note"; gap: 10px; padding: 18px; }
   .limit-values { display: flex; flex-direction: row; align-items: center; gap: 12px; border-left: 0; border-top: 1px solid #d5e6dd; padding-left: 0; padding-top: 9px; }
   .limit-values > span:first-child { margin-bottom: 0; }
@@ -477,11 +507,6 @@ textarea::placeholder { color: #a0aaa8; }
   #convergence-graph { max-height: 270px; }
   .data-scroll { max-height: 255px; }
   table { font-size: 11px; }
-  .theory-strip { gap: 24px; padding-inline: 22px; }
-  .theory-strip { flex-wrap: wrap; }
-  .theory-strip > div:first-child { flex-basis: auto; flex-grow: 1; }
-  .theory-strip > p { flex-basis: 100%; }
-  .theory-strip > strong, .theory-strip > .formula, .theory-strip .theory-formula { font-size: 21px; }
 }
 
 @media (max-width: 760px) {
@@ -523,17 +548,11 @@ textarea::placeholder { color: #a0aaa8; }
   .coordinate-row { padding: 11px 8px; }
   .coordinate-row > * { gap: 3px 5px; padding-inline: 5px; font-size: 9px; }
   .coordinate-row strong { font-size: 10px; }
-  .metric-number { font-size: 26px; }
-  .metric-label { font-size: 11px; }
-  .metric-formula { font-size: 10px; }
   .insight-panel { padding: 19px; }
   .insight-status { font-size: 13px; }
   .insight-body { font-size: 12px; }
   .below-grid { margin-top: 18px; gap: 18px; }
   .convergence-panel, .data-panel { padding: 19px; }
-  .theory-strip { margin-top: 18px; flex-direction: column; align-items: flex-start; gap: 12px; padding: 20px; }
-  .theory-strip > div:first-child { flex-basis: auto; flex-grow: 0; }
-  .theory-strip > strong, .theory-strip > .formula, .theory-strip .theory-formula { font-size: 23px; }
   .notes-grid { grid-template-columns: 1fr; margin-top: 18px; gap: 18px; }
   .notes-grid > .panel { padding: 21px; }
   .question-list summary { font-size: 12px; }
@@ -565,12 +584,8 @@ textarea::placeholder { color: #a0aaa8; }
   .graph-panel > .legend { padding-inline: 14px; gap: 5px 11px; font-size: 9px; }
   .graph-stage { min-height: 0; aspect-ratio: 820 / 460; }
   .graph-tip { margin-inline: 14px; }
+  .tangent-status { margin-inline: 14px; }
   .coordinate-row > * { flex-direction: column; gap: 1px; font-size: 9px; }
-  .metric-grid { gap: 7px; }
-  .metric { border-radius: 10px; padding: 13px 9px 12px; }
-  .metric-label { font-size: 9px; }
-  .metric-number { font-size: 21px; letter-spacing: -.7px; overflow-wrap: anywhere; }
-  .metric-formula { font-size: 8px; letter-spacing: -.1px; }
   .insight-panel { padding: 16px; }
   .limit-values { gap: 9px; flex-wrap: wrap; }
   .limit-values > span:first-child { flex-basis: 100%; }
@@ -583,7 +598,37 @@ textarea::placeholder { color: #a0aaa8; }
   .convergence-panel, .data-panel, .notes-grid > .panel { padding: 18px 16px; }
   table { font-size: 10px; }
   td, th { padding: 9px 10px; }
-  .theory-strip { padding: 18px; }
+}
+
+/* Use the graph column's actual width, including beside the desktop sidebar. */
+@container experiment (max-width: 810px) {
+  .metric-grid { grid-template-columns: 1fr; gap: 10px; }
+  .metric { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); column-gap: 22px; row-gap: 3px; padding: 16px 20px; }
+  .metric-label { grid-column: 1; grid-row: 1; }
+  .metric-formula { grid-column: 1; grid-row: 2; min-height: 54px; margin-top: 3px; }
+  .metric-number { grid-column: 2; grid-row: 1 / span 2; align-self: center; margin-top: 0; font-size: 27px; }
+  .metric-number.is-long { font-size: clamp(16px, 3.5cqi, 20px); }
+  .metric-value-note { grid-column: 2; grid-row: 3; margin-top: -7px; }
+}
+
+@container experiment (max-width: 560px) {
+  .metric { display: block; padding: 17px 20px; }
+  .metric-label { font-size: 12px; }
+  .metric-formula { margin-top: 8px; font-size: 20px; }
+  .metric-formula .metric-fraction { font-size: 19px; }
+  .metric-number { margin-top: 7px; font-size: 28px; }
+  .metric-number.is-long { font-size: clamp(16px, 6.4cqi, 21px); }
+  .metric-value-note { margin-top: 5px; font-size: 11px; }
+  .slope-relation { grid-template-columns: 1fr; gap: 10px; padding: 17px 19px; }
+  .slope-relation > .theory-formula { grid-column: 1; grid-row: auto; font-size: 27px; }
+  .slope-relation h3 { font-size: 14px; }
+  .slope-relation > p { font-size: 11px; }
+  .reading-guide { font-size: 12px; }
+}
+
+@supports not (container-type: inline-size) {
+  .metric-grid { grid-template-columns: 1fr; }
+  .metric-number.is-long { font-size: 18px; }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -601,7 +646,7 @@ textarea::placeholder { color: #a0aaa8; }
   .hero { margin-bottom: 15px; }
   .hero h1 { font-size: 25px; }
   .hero-copy, .hero-step-row { margin-top: 7px; }
-  .panel, .metric, .insight-panel, .theory-strip { box-shadow: none; break-inside: avoid; }
+  .panel, .metric, .insight-panel, .slope-relation { box-shadow: none; break-inside: avoid; }
   .graph-stage { min-height: 0; aspect-ratio: 820 / 460; }
   .data-scroll { max-height: none; overflow: visible; }
   th { position: static; }
@@ -628,9 +673,9 @@ textarea::placeholder { color: #a0aaa8; }
   <main class="page" id="main">
     <section class="hero" aria-labelledby="page-title">
       <div class="eyebrow"><span></span> 대칭 할선의 기울기와 극한 탐구</div>
-      <h1 id="page-title">기울기가 모이면,<br class="mobile-break"> 미분할 수 있을까?</h1>
-      <p class="hero-copy">점을 직접 움직이고, 두 점 사이를 좁혀 보세요.<br class="mobile-break"> 그래프와 세 기울기를 함께 보면 새로운 질문이 보입니다.</p>
-      <div class="hero-step-row" aria-label="탐구 순서"><span class="step"><b>01</b> 함수 고르기</span><span class="step-arrow" aria-hidden="true">→</span><span class="step"><b>02</b> 점 움직이기</span><span class="step-arrow" aria-hidden="true">→</span><span class="step"><b>03</b> 극한 비교하기</span></div>
+      <h1 id="page-title">기울기가 수렴하면,<br class="mobile-break"> 미분할 수 있을까?</h1>
+      <p class="hero-copy">함수를 고르고 자동 관찰을 눌러 보세요.<br class="mobile-break"> 점을 직접 움직이며 좌우 기울기와 대칭 기울기를 비교할 수도 있어요.</p>
+      <div class="hero-step-row" aria-label="탐구 순서"><span class="step"><b>01</b> 함수 고르기</span><span class="step-arrow" aria-hidden="true">→</span><span class="step"><b>02</b> 자동 관찰</span><span class="step-arrow" aria-hidden="true">→</span><span class="step"><b>03</b> 극한 비교하기</span></div>
     </section>
 
     <div class="workspace">
@@ -645,14 +690,23 @@ textarea::placeholder { color: #a0aaa8; }
         </div>
         <p class="tiny-note" id="function-detail">모든 실수에서 f(x) = x²</p>
 
-        <div class="control-section">
-          <label class="field-row" for="a-input"><span class="field-label">기준점 <i>a</i><small>가운데 점 A의 x좌표</small></span><input class="number-input" type="number" id="a-input" min="-3" max="3" step="0.01" value="1" inputmode="decimal"></label>
-          <button id="a-zero" class="btn btn-quiet btn-small" type="button">기준점을 원점으로</button>
-          <label class="field-row h-field" for="h-input"><span class="field-label">거리 <i>h</i><small>A에서 양쪽 점까지의 가로 거리</small></span><input class="number-input" type="number" id="h-input" min="0.000001" max="2" step="any" value="1" inputmode="decimal"></label>
-          <div class="button-row"><button id="halve" class="btn btn-secondary btn-small" type="button">h ÷ 2</button><button id="double" class="btn btn-secondary btn-small" type="button">h × 2</button></div>
-          <button id="animate" class="btn btn-primary full-width" type="button" aria-pressed="false"><span aria-hidden="true">▶</span> h → 0 자동 관찰</button>
-          <p class="tiny-note">h는 0이 되지 않아요. 최소 0.000001까지 줄일 수 있어요.</p>
+        <div class="auto-observe" aria-label="자동 관찰">
+          <p class="experiment-state" id="experiment-state">a = 1 · h = 1</p>
+          <button id="animate" class="btn btn-primary full-width auto-play" type="button" aria-pressed="false"><span aria-hidden="true">▶</span> h → 0 자동 관찰</button>
+          <button id="animate-origin" class="btn btn-secondary full-width" type="button">원점에서 자동 관찰</button>
+          <p class="animation-status" id="animation-status" role="status" aria-live="polite">h가 작아질 때 세 기울기를 비교해 보세요.</p>
         </div>
+
+        <details class="manual-controls" id="manual-controls">
+          <summary><span>숫자로 직접 조절하기</span><span class="manual-summary-hint">선택</span></summary>
+          <div class="manual-controls-body">
+            <label class="field-row" for="a-input"><span class="field-label">기준점 <i>a</i><small>가운데 점 A의 x좌표</small></span><input class="number-input" type="number" id="a-input" min="-3" max="3" step="0.01" value="1" inputmode="decimal"></label>
+            <button id="a-zero" class="btn btn-quiet btn-small" type="button">기준점을 원점으로</button>
+            <label class="field-row h-field" for="h-input"><span class="field-label">거리 <i>h</i><small>A에서 양쪽 점까지의 가로 거리</small></span><input class="number-input" type="number" id="h-input" min="0.000001" max="2" step="any" value="1" inputmode="decimal"></label>
+            <div class="button-row"><button id="halve" class="btn btn-secondary btn-small" type="button">h ÷ 2</button><button id="double" class="btn btn-secondary btn-small" type="button">h × 2</button></div>
+            <p class="tiny-note">h는 0보다 큰 값으로 조절해요.</p>
+          </div>
+        </details>
 
         <div class="control-section selected-point">
           <label class="field-label" id="point-selector-label">움직일 점 선택</label>
@@ -665,7 +719,7 @@ textarea::placeholder { color: #a0aaa8; }
         </div>
         <div class="control-section">
           <label class="toggle-row"><input type="checkbox" id="show-sides" checked><span>왼쪽·오른쪽 할선 함께 보기</span></label>
-          <label class="toggle-row"><input type="checkbox" id="show-tangent"><span>실제 접선 보기</span></label>
+          <label class="toggle-row"><input type="checkbox" id="show-tangent" checked><span>실제 접선 보기</span></label>
           <p class="tiny-note" id="tangent-note">접선은 기준점 A를 지나며, 기울기는 f′(a)입니다.</p>
         </div>
         <button class="counterexample-banner" id="counterexample" type="button"><span>꼭 해 볼 실험</span><strong>|x|의 원점에서는 어떨까? <span aria-hidden="true">→</span></strong></button>
@@ -675,7 +729,7 @@ textarea::placeholder { color: #a0aaa8; }
       <div class="main-column">
         <section class="panel graph-panel" aria-labelledby="graph-title">
           <div class="graph-toolbar"><div><div class="section-kicker">직접 움직이는 그래프</div><h2 id="graph-title">f(x) = x²</h2></div><div class="graph-actions"><button id="zoom-in" class="btn btn-icon" type="button" aria-label="그래프 확대" title="확대">＋</button><button id="zoom-out" class="btn btn-icon" type="button" aria-label="그래프 축소" title="축소">−</button><button id="fit" class="btn btn-quiet btn-small" type="button">화면 맞춤</button><button id="download-svg" class="btn btn-quiet btn-small" type="button" title="현재 그래프 SVG 다운로드">그림 저장 <span aria-hidden="true">↓</span></button></div></div>
-          <div class="legend" aria-label="그래프 범례"><span class="legend-item"><span class="swatch curve-blue"></span>함수</span><span class="legend-item"><span class="swatch symmetric-purple"></span>대칭 할선</span><span class="legend-item" id="side-legend-left"><span class="swatch left-green dashed"></span>왼쪽 할선</span><span class="legend-item" id="side-legend-right"><span class="swatch right-coral dashed"></span>오른쪽 할선</span><span class="legend-item" id="tangent-legend" hidden><span class="swatch center-navy dashed"></span>접선</span></div>
+          <div class="legend" aria-label="그래프 범례"><span class="legend-item"><span class="swatch curve-blue"></span>함수</span><span class="legend-item"><span class="swatch symmetric-purple"></span>대칭 할선</span><span class="legend-item" id="side-legend-left"><span class="swatch left-green dashed"></span>왼쪽 할선</span><span class="legend-item" id="side-legend-right"><span class="swatch right-coral dashed"></span>오른쪽 할선</span><span class="legend-item" id="tangent-legend"><span class="swatch center-navy dashed"></span>접선</span></div>
           <div class="graph-stage">
             <svg id="main-graph" viewBox="0 0 820 460" aria-labelledby="graph-svg-title graph-svg-desc">
               <title id="graph-svg-title">함수와 대칭 할선 그래프</title>
@@ -683,7 +737,7 @@ textarea::placeholder { color: #a0aaa8; }
               <defs><clipPath id="plot-clip"><rect x="61" y="21" width="736" height="386"/></clipPath></defs>
               <rect x="0" y="0" width="820" height="460" fill="#ffffff"/>
               <g id="grid-layer"></g>
-              <g id="plot-layer" clip-path="url(#plot-clip)"><path id="curve" class="curve-path"/><path id="tangent" class="tangent-path"/><path id="left-secant" class="left-path"/><path id="right-secant" class="right-path"/><path id="symmetric-secant" class="secant-path"/><g id="guides-layer"></g></g>
+              <g id="plot-layer" clip-path="url(#plot-clip)"><path id="curve" class="curve-path"/><path id="left-secant" class="left-path"/><path id="right-secant" class="right-path"/><path id="symmetric-secant" class="secant-path"/><path id="tangent" class="tangent-path"/><g id="guides-layer"></g></g>
               <g id="labels-layer"></g>
               <g id="points-layer">
                 <g id="point-left" class="graph-point" data-point="left" tabindex="0" role="slider" aria-label="왼쪽 점 L: 거리 h 조절" aria-orientation="horizontal" style="--point-color:#119773"><circle class="point-hit" r="21"/><circle class="point-halo" r="13"/><circle class="point-core" r="7"/><text class="point-label" x="-15" y="-17">L</text></g>
@@ -693,16 +747,38 @@ textarea::placeholder { color: #a0aaa8; }
             </svg>
           </div>
           <div class="graph-tip"><span aria-hidden="true">↔</span><span id="drag-tip"><strong>점을 잡고 좌우로 끌어 보세요.</strong> A는 기준점, L·R은 거리 h를 바꿉니다.</span></div>
+          <p class="tangent-status" id="tangent-status">짙은 점선은 A를 지나는 실제 접선입니다.</p>
           <div class="coordinate-row"><span class="coordinate-chip"><i class="dot left-green"></i><b>L</b> <span id="left-coord">(0, 0)</span></span><span class="coordinate-chip"><i class="dot center-navy"></i><b>A</b> <span id="center-coord">(1, 1)</span></span><span class="coordinate-chip"><i class="dot right-coral"></i><b>R</b> <span id="right-coord">(2, 4)</span></span></div>
         </section>
 
         <section aria-labelledby="slopes-title">
-          <div class="metrics-heading"><h2 id="slopes-title">지금의 세 기울기</h2><span>현재 거리 h에서 계산한 평균변화율</span></div>
+          <div class="metrics-heading"><h2 id="slopes-title">지금의 세 기울기</h2><span>h &gt; 0 · 현재 거리에서 계산한 평균변화율</span></div>
           <div class="metric-grid">
-            <div class="metric metric-left"><div class="metric-label"><span class="dot left-green"></span>왼쪽 할선</div><div class="metric-number" id="left-value">1.000000</div><div class="metric-formula">L<sub>h</sub> = [f(a) − f(a−h)] / h</div></div>
-            <div class="metric metric-right"><div class="metric-label"><span class="dot right-coral"></span>오른쪽 할선</div><div class="metric-number" id="right-value">3.000000</div><div class="metric-formula">R<sub>h</sub> = [f(a+h) − f(a)] / h</div></div>
-            <div class="metric metric-symmetric"><div class="metric-label"><span class="dot symmetric-purple"></span>대칭 할선</div><div class="metric-number" id="symmetric-value">2.000000</div><div class="metric-formula">S<sub>h</sub> = [f(a+h) − f(a−h)] / (2h)</div></div>
+            <div class="metric metric-left">
+              <div class="metric-label"><span class="dot left-green"></span>왼쪽 할선</div>
+              <div class="metric-formula math-formula" role="math" aria-label="L h는 f(a)에서 f(a-h)를 뺀 값을 h로 나눈 값"><span class="math-symbol">L<sub>h</sub></span><span class="math-equals">=</span><span class="fraction metric-fraction"><span>f(a) − f(a−h)</span><span>h</span></span></div>
+              <div class="metric-number" id="left-value">1.000000</div>
+              <p class="metric-value-note" id="left-value-note"></p>
+            </div>
+            <div class="metric metric-right">
+              <div class="metric-label"><span class="dot right-coral"></span>오른쪽 할선</div>
+              <div class="metric-formula math-formula" role="math" aria-label="R h는 f(a+h)에서 f(a)를 뺀 값을 h로 나눈 값"><span class="math-symbol">R<sub>h</sub></span><span class="math-equals">=</span><span class="fraction metric-fraction"><span>f(a+h) − f(a)</span><span>h</span></span></div>
+              <div class="metric-number" id="right-value">3.000000</div>
+              <p class="metric-value-note" id="right-value-note"></p>
+            </div>
+            <div class="metric metric-symmetric">
+              <div class="metric-label"><span class="dot symmetric-purple"></span>대칭 할선</div>
+              <div class="metric-formula math-formula" role="math" aria-label="S h는 f(a+h)에서 f(a-h)를 뺀 값을 2h로 나눈 값"><span class="math-symbol">S<sub>h</sub></span><span class="math-equals">=</span><span class="fraction metric-fraction"><span>f(a+h) − f(a−h)</span><span>2h</span></span></div>
+              <div class="metric-number" id="symmetric-value">2.000000</div>
+              <p class="metric-value-note" id="symmetric-value-note"></p>
+            </div>
           </div>
+          <div class="slope-relation" aria-labelledby="relation-title">
+            <h3 id="relation-title">대칭 기울기는 좌우 기울기의 평균</h3>
+            <div class="theory-formula" role="math" aria-label="S h는 L h와 R h의 합을 2로 나눈 값"><span>S<sub>h</sub></span><span>=</span><span class="fraction"><span>L<sub>h</sub> + R<sub>h</sub></span><span>2</span></span></div>
+            <p>평균의 수렴만으로 미분가능성을 판단할 수 없어요.</p>
+          </div>
+          <p class="reading-guide" id="reading-guide" role="status" aria-live="polite">h를 줄이며 왼쪽과 오른쪽 기울기가 같은 값으로 수렴하는지 확인해 보세요.</p>
         </section>
 
         <section class="insight-panel" id="insight-panel" aria-labelledby="insight-title">
@@ -726,12 +802,6 @@ textarea::placeholder { color: #a0aaa8; }
         <div class="data-scroll" tabindex="0" aria-label="기울기 변화 표"><table><caption class="sr-only">현재 함수와 기준점에서 거리를 절반으로 줄이는 기울기 계산</caption><thead><tr><th scope="col">h</th><th scope="col" class="text-left-green">왼쪽</th><th scope="col" class="text-right-coral">오른쪽</th><th scope="col" class="text-symmetric-purple">대칭</th></tr></thead><tbody id="data-body"></tbody></table></div>
         <p class="tiny-note" id="table-note">원래 값은 CSV에 더 높은 정밀도로 저장됩니다.</p>
       </div>
-    </section>
-
-    <section class="theory-strip" aria-labelledby="relation-title">
-      <div><span class="section-kicker">세 기울기를 연결하는 식</span><h2 id="relation-title">대칭 기울기는 좌우 기울기의 평균이에요.</h2></div>
-      <div class="theory-formula">S<sub>h</sub> <span>=</span> <span class="fraction"><span>L<sub>h</sub> + R<sub>h</sub></span><span>2</span></span></div>
-      <p>평균이 한 값으로 모여도 두 값이 같은 곳으로 모인다는 뜻은 아닙니다.<br>미분가능하려면 왼쪽과 오른쪽 기울기의 극한이 <strong>같은 유한한 값</strong>이어야 해요.</p>
     </section>
 
     <section class="notes-grid" id="explore" aria-label="탐구 가이드와 관찰 메모">
@@ -800,6 +870,38 @@ textarea::placeholder { color: #a0aaa8; }
     }
     // Avoid displaying a mathematical zero as -0 in the interface.
     return value === 0 ? 0 : value;
+  }
+
+  function formatNumber(value, significantDigits = 6) {
+    if (!Number.isFinite(value)) return "—";
+    if (!Number.isInteger(significantDigits) || significantDigits < 1 || significantDigits > 100) {
+      throw new RangeError("significantDigits must be an integer from 1 to 100.");
+    }
+    if (value === 0) return "0";
+
+    // Round once to significant digits, then arrange the decimal as text.
+    // Converting the rounded string back to a number could underflow tiny
+    // nonzero values, overflow large values, or reintroduce e notation.
+    const [coefficient, exponentText] = Math.abs(value)
+      .toExponential(significantDigits - 1).split("e");
+    const exponent = Number(exponentText);
+    const digits = coefficient.replace(".", "").replace(/0+$/, "");
+    const sign = value < 0 ? "−" : "";
+
+    // Use ordinary decimals from 10^-12 up to (but not including) 10^12,
+    // applying the boundary after rounding so carries stay consistent.
+    if (exponent >= -12 && exponent < 12) {
+      const point = exponent + 1;
+      if (point <= 0) return sign + "0." + "0".repeat(-point) + digits;
+      if (point >= digits.length) return sign + digits + "0".repeat(point - digits.length);
+      return sign + digits.slice(0, point) + "." + digits.slice(point);
+    }
+
+    const superscripts = { "0": "⁰", "1": "¹", "2": "²", "3": "³", "4": "⁴",
+      "5": "⁵", "6": "⁶", "7": "⁷", "8": "⁸", "9": "⁹", "-": "⁻" };
+    const power = String(exponent).replace(/[0-9-]/g, (character) => superscripts[character]);
+    const mantissa = digits[0] + (digits.length > 1 ? "." + digits.slice(1) : "");
+    return sign + mantissa + " × 10" + power;
   }
 
   function evaluate(id, x) {
@@ -939,7 +1041,8 @@ textarea::placeholder { color: #a0aaa8; }
     A_MAX,
     evaluate,
     calculate,
-    analyze
+    analyze,
+    formatNumber
   });
 });
 
@@ -953,7 +1056,7 @@ textarea::placeholder { color: #a0aaa8; }
   const NS = "http://www.w3.org/2000/svg";
   const COLORS = { left: "#119773", right: "#e46b52", symmetric: "#8254bd", center: "#172d4b" };
   const PLOT = { left: 61, right: 797, top: 21, bottom: 407 };
-  const state = { fn: "quadratic", a: 1, h: 1, selected: "center", sides: true, tangent: false };
+  const state = { fn: "quadratic", a: 1, h: 1, selected: "center", sides: true, tangent: true };
   let view;
   let rows = [];
   let dragging = null;
@@ -961,6 +1064,7 @@ textarea::placeholder { color: #a0aaa8; }
   let animationRequest = 0;
   let animationLast = null;
   let playing = false;
+  let animationFinished = false;
   let lastAnnouncement = "";
   const graph = $("main-graph");
   const pointNames = { left: "왼쪽 점 L", center: "기준점 A", right: "오른쪽 점 R" };
@@ -971,14 +1075,11 @@ textarea::placeholder { color: #a0aaa8; }
     return;
   }
 
-  function format(value, digits = 6, fixed = false) {
-    if (!Number.isFinite(value)) return "—";
-    if (value === 0 || Object.is(value, -0)) return fixed ? (0).toFixed(digits) : "0";
-    if (Math.abs(value) < 0.0001 || Math.abs(value) >= 1000000) {
-      return value.toExponential(Math.min(digits, 4)).replace(/\.?(0+)(?=e)/, "").replace("e+", "e");
-    }
-    const rounded = value.toFixed(digits);
-    return fixed ? rounded : String(Number(rounded));
+  const format = (value, digits = 6) => M.formatNumber(value, digits);
+
+  function setText(id, value) {
+    const node = $(id);
+    if (node.textContent !== value) node.textContent = value;
   }
 
   function element(name, attrs = {}, text) {
@@ -1064,6 +1165,13 @@ textarea::placeholder { color: #a0aaa8; }
     return `M${sx(x1).toFixed(3)},${sy(y1).toFixed(3)}L${sx(x2).toFixed(3)},${sy(y2).toFixed(3)}`;
   }
 
+  function fullLine(x, y, slope) {
+    // A secant is the line through its two function points, extended across
+    // the plot. It is not replaced by a line through A unless A lies on it.
+    return pathLine(view.xMin, y + slope * (view.xMin - x),
+      view.xMax, y + slope * (view.xMax - x));
+  }
+
   function renderGrid() {
     const grid = $("grid-layer");
     const nodes = [];
@@ -1093,16 +1201,15 @@ textarea::placeholder { color: #a0aaa8; }
   function renderMainGraph(r, analysis) {
     renderGrid();
     renderCurve();
-    $("symmetric-secant").setAttribute("d", pathLine(r.leftX, r.leftY, r.rightX, r.rightY));
-    $("left-secant").setAttribute("d", pathLine(r.leftX, r.leftY, state.a, r.centerY));
-    $("right-secant").setAttribute("d", pathLine(state.a, r.centerY, r.rightX, r.rightY));
+    $("symmetric-secant").setAttribute("d", fullLine(r.leftX, r.leftY, r.symmetric));
+    $("left-secant").setAttribute("d", fullLine(state.a, r.centerY, r.left));
+    $("right-secant").setAttribute("d", fullLine(state.a, r.centerY, r.right));
     $("left-secant").style.display = state.sides ? "" : "none";
     $("right-secant").style.display = state.sides ? "" : "none";
     const showTangent = state.tangent && analysis.differentiable;
     $("tangent").style.display = showTangent ? "" : "none";
     if (showTangent) {
-      const f = (x) => r.centerY + analysis.derivative * (x - state.a);
-      $("tangent").setAttribute("d", pathLine(view.xMin, f(view.xMin), view.xMax, f(view.xMax)));
+      $("tangent").setAttribute("d", fullLine(state.a, r.centerY, analysis.derivative));
     }
     $("tangent-legend").hidden = !showTangent;
     $("side-legend-left").hidden = !state.sides;
@@ -1142,9 +1249,17 @@ textarea::placeholder { color: #a0aaa8; }
   }
 
   function renderInsights(r, analysis) {
-    $("left-value").textContent = format(r.left, 6, true);
-    $("right-value").textContent = format(r.right, 6, true);
-    $("symmetric-value").textContent = format(r.symmetric, 6, true);
+    ["left", "right", "symmetric"].forEach((key) => {
+      const value = r[key];
+      const text = format(value, 9);
+      const node = $(`${key}-value`);
+      node.textContent = text;
+      node.classList.toggle("is-long", text.length > 10);
+      node.title = `현재 h에서의 계산값: ${format(value, 12)}`;
+      $(`${key}-value-note`).textContent = value !== 0 && Math.abs(value) < 0.0001
+        ? (value < 0 ? "0에 가까운 음수 · 아직 0은 아니에요" : "0에 가까운 양수 · 아직 0은 아니에요")
+        : "현재 h에서의 기울기";
+    });
     $("insight-title").textContent = analysis.differentiable ? "이 지점에서는 미분할 수 있어요" : "대칭 기울기가 모여도, 미분할 수 없어요";
     $("derivative-status").textContent = analysis.differentiable ? "미분 가능" : "미분 불가능";
     $("derivative-status").dataset.kind = analysis.differentiable ? "success" : "warning";
@@ -1157,6 +1272,36 @@ textarea::placeholder { color: #a0aaa8; }
     $("tangent-note").textContent = analysis.differentiable
       ? `접선은 A를 지나며 기울기는 f′(a) = ${format(analysis.derivative)}입니다.`
       : "이 기준점에는 미분계수가 없어 접선을 표시하지 않습니다.";
+    $("show-tangent").disabled = !analysis.differentiable;
+    $("tangent-status").textContent = !analysis.differentiable
+      ? "이 기준점에는 접선이 없어요. 보라색 대칭 할선과 접선을 구별해 보세요."
+      : state.tangent
+        ? `진한 점선은 A에서의 접선 · 기울기 f′(a) = ${format(analysis.derivative)}`
+        : "‘실제 접선 보기’를 켜면 할선과 접선을 비교할 수 있어요.";
+    $("tangent-status").dataset.kind = analysis.differentiable ? "success" : "warning";
+    let guide;
+    if (state.fn === "quadratic" && state.a === 0) {
+      guide = "왼쪽 기울기는 −h, 오른쪽은 h예요. h를 줄이면 둘 다 0에 가까워지고, 대칭 기울기는 항상 0입니다. 따라서 접선 y = 0의 기울기도 0이에요.";
+    } else if (state.fn === "absolute" && state.a === 0) {
+      guide = "왼쪽은 −1, 오른쪽은 1로 계속 달라요. 대칭 기울기가 0이어도, 이 원점에는 미분계수와 접선이 없어요.";
+    } else if (state.fn === "piecewise" && state.a === 0) {
+      guide = "왼쪽은 1, 오른쪽은 0으로 가까워져요. 대칭 기울기는 0.5로 모이지만, 좌우 극한이 달라 미분할 수 없어요.";
+    } else {
+      guide = `h를 줄이면 좌우 기울기는 모두 ${format(analysis.derivative)}에 가까워져요. 이 극한값이 A에서의 미분계수예요. 아래에서 현재 값과 극한값을 비교해 보세요.`;
+    }
+    setText("reading-guide", guide);
+  }
+
+  function renderExperienceStatus() {
+    $("experiment-state").textContent = `기준점 a = ${format(state.a)} · 거리 h = ${format(state.h)} > 0`;
+    setText("animation-status", playing
+      ? "관찰 중 · 양쪽 점이 A에 가까워질 때, 세 기울기를 비교해 보세요."
+      : animationFinished
+        ? "관찰 완료 · h = 0.000001까지 줄였어요. h에 0을 대입한 것은 아니에요."
+        : "버튼을 누르면 약 8초 동안 h가 작아져요. 중간에 멈출 수도 있어요.");
+    $("animate").textContent = playing ? "Ⅱ 자동 관찰 일시정지"
+      : animationFinished ? "↻ h → 0 다시 관찰" : "▶ h → 0 자동 관찰";
+    $("animate").setAttribute("aria-pressed", String(playing));
   }
 
   function renderConvergence() {
@@ -1217,6 +1362,7 @@ textarea::placeholder { color: #a0aaa8; }
     const analysis = M.analyze(state.fn, state.a);
     renderMainGraph(result, analysis);
     renderInsights(result, analysis);
+    renderExperienceStatus();
     renderConvergence();
     $("graph-title").textContent = M.FUNCTIONS[state.fn].formula;
     $("function-detail").textContent = state.fn === "piecewise"
@@ -1245,8 +1391,7 @@ textarea::placeholder { color: #a0aaa8; }
     animationRequest = 0;
     animationLast = null;
     playing = false;
-    $("animate").textContent = "▶ h → 0 자동 관찰";
-    $("animate").setAttribute("aria-pressed", "false");
+    renderExperienceStatus();
   }
 
   function setSelected(which) {
@@ -1257,6 +1402,7 @@ textarea::placeholder { color: #a0aaa8; }
   }
 
   function update({ a = state.a, h = state.h, fn = state.fn }, { fit = false, announce = true } = {}) {
+    animationFinished = false;
     stopAnimation();
     state.a = clamp(a, M.A_MIN, M.A_MAX);
     state.h = clamp(h, M.MIN_H, M.MAX_H);
@@ -1274,6 +1420,7 @@ textarea::placeholder { color: #a0aaa8; }
   }
 
   function movePoint(which, x, quantize = false) {
+    animationFinished = false;
     if (which === "center") {
       state.a = clamp(quantize ? Math.round(x * 100) / 100 : x, M.A_MIN, M.A_MAX);
       if (Object.is(state.a, -0)) state.a = 0;
@@ -1320,6 +1467,7 @@ textarea::placeholder { color: #a0aaa8; }
   function handlePointKey(event, which) {
     if (!["ArrowLeft", "ArrowRight", "Home", "End"].includes(event.key)) return;
     event.preventDefault();
+    animationFinished = false;
     stopAnimation();
     setSelected(which);
     const direction = event.key === "ArrowLeft" ? -1 : 1;
@@ -1376,9 +1524,10 @@ textarea::placeholder { color: #a0aaa8; }
   });
   $("reset").addEventListener("click", () => {
     state.sides = true;
-    state.tangent = false;
+    state.tangent = true;
     $("show-sides").checked = true;
-    $("show-tangent").checked = false;
+    $("show-tangent").checked = true;
+    $("manual-controls").open = false;
     $("input-status").textContent = "";
     setSelected("center");
     update({ fn: "quadratic", a: 1, h: 1 }, { fit: true });
@@ -1398,28 +1547,37 @@ textarea::placeholder { color: #a0aaa8; }
   $("zoom-out").addEventListener("click", () => zoom(1.4));
   $("fit").addEventListener("click", () => { fitView(); render(); });
 
-  $("animate").addEventListener("click", () => {
-    if (playing) { stopAnimation(); say("자동 관찰을 멈췄어요."); return; }
+  function startAnimation() {
     if (state.h <= M.MIN_H * 1.01) state.h = 1;
+    animationFinished = false;
     playing = true;
     animationLast = null;
-    $("animate").textContent = "Ⅱ 자동 관찰 일시정지";
-    $("animate").setAttribute("aria-pressed", "true");
+    renderExperienceStatus();
     ensureVisible();
     const frame = (now) => {
       if (!playing) return;
-      const dt = animationLast === null ? 0 : Math.min(100, now - animationLast);
+      const dt = animationLast === null ? 0 : Math.max(0, now - animationLast);
       animationLast = now;
-      state.h = Math.max(M.MIN_H, state.h * Math.exp(-dt / 1250));
+      state.h = Math.max(M.MIN_H, state.h * Math.exp(-dt / 600));
       render();
       if (state.h <= M.MIN_H * (1 + 1e-8)) {
         state.h = M.MIN_H;
+        animationFinished = true;
         stopAnimation();
         render();
         say("h가 0.000001에 도달했어요. 0에 대입한 값이 아니라, 0에 가까워지는 과정을 관찰한 것입니다.");
       } else animationRequest = window.requestAnimationFrame(frame);
     };
     animationRequest = window.requestAnimationFrame(frame);
+  }
+  $("animate").addEventListener("click", () => {
+    if (playing) { stopAnimation(); say("자동 관찰을 멈췄어요."); return; }
+    startAnimation();
+  });
+  $("animate-origin").addEventListener("click", () => {
+    update({ a: 0, h: 1 }, { fit: true });
+    startAnimation();
+    say(`${M.FUNCTIONS[state.fn].name}의 원점에서 자동 관찰을 시작했어요.`);
   });
   document.addEventListener("visibilitychange", () => { if (document.hidden) stopAnimation(); });
 
