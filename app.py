@@ -2,8 +2,9 @@
 
 실행: python -m streamlit run app.py
 HTML/CSS/JavaScript를 포함한 단일 파일이며 외부 차트 CDN을 사용하지 않습니다.
-생성 원본: dist/; 재생성: python tools/build_streamlit.py
+생성 원본: web/ 및 server/; 재생성: python tools/build_streamlit.py
 """
+from __future__ import annotations
 import streamlit as st
 
 st.set_page_config(
@@ -25,6 +26,7 @@ st.markdown(
 HTML = r"""<!doctype html>
 <html lang="ko">
 <head>
+<script>window.SECANT_COMMENTS_MODE = "streamlit";</script>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="description" content="그래프 위의 점을 직접 움직이며 대칭 할선, 평균변화율, 미분계수의 관계를 탐구하는 수학 실험실입니다.">
@@ -61,8 +63,8 @@ button, input, textarea, select { font: inherit; }
 button, input, textarea { -webkit-tap-highlight-color: transparent; }
 button { color: inherit; cursor: pointer; }
 button:disabled { cursor: not-allowed; opacity: .46; }
-button, a, input, textarea, summary { outline-offset: 4px; }
-button:focus-visible, a:focus-visible, input:focus-visible, textarea:focus-visible, summary:focus-visible {
+button, a, input, textarea, select, summary { outline-offset: 4px; }
+button:focus-visible, a:focus-visible, input:focus-visible, textarea:focus-visible, select:focus-visible, summary:focus-visible {
   outline: 3px solid #4fa6a0;
 }
 button { touch-action: manipulation; }
@@ -450,7 +452,7 @@ td:last-child { color: var(--purple); font-weight: 600; }
 .fraction { display: inline-flex; flex-direction: column; align-items: center; text-align: center; vertical-align: middle; font-size: 18px; line-height: 1.6; }
 .fraction > span:first-child { padding: 0 6px 3px; border-bottom: 1px solid currentColor; }
 .fraction > span:last-child { padding-top: 2px; font-size: 17px; }
-.notes-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 22px; margin-top: 22px; }
+.notes-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); align-items: start; gap: 22px; margin-top: 22px; }
 .notes-grid > .panel { padding: 23px 24px; min-width: 0; }
 .question-list { margin-top: 16px; }
 .question-list details { border-top: 1px solid #e6ece8; }
@@ -466,6 +468,50 @@ td:last-child { color: var(--purple); font-weight: 600; }
 textarea::placeholder { color: #a0aaa8; }
 .note-actions { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-top: 12px; }
 .note-actions .tiny-note { margin-top: 0; }
+.comment-board { container: comments / inline-size; }
+.comment-board .section-header { align-items: center; margin-bottom: 12px; }
+.comment-count { display: inline-flex; align-items: center; justify-content: center; min-width: 36px; min-height: 28px; padding: 4px 10px; border: 1px solid #d6e7df; border-radius: 99px; background: #edf7f2; color: var(--teal); font-size: 12px; font-weight: 750; line-height: 1.5; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.comment-storage { margin: 0 0 17px; padding: 9px 11px; border: 1px solid #e0eae4; border-radius: 8px; background: #f4f8f5; color: #748a7e; font-size: 11px; line-height: 1.75; word-break: keep-all; }
+.comment-storage[data-mode="offline"] { border-color: #eadcbe; background: #fff8eb; color: #977438; }
+.comment-form { margin: 0; }
+.comment-fields { min-width: 0; margin: 0; padding: 0; border: 0; }
+.comment-identity { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1.7fr); gap: 10px; }
+.comment-field { display: flex; flex-direction: column; gap: 6px; min-width: 0; color: #566e63; font-size: 12px; font-weight: 650; line-height: 1.65; }
+.comment-field input, .comment-field select { width: 100%; min-width: 0; min-height: 41px; padding: 9px 10px; border: 1px solid #dce5df; border-radius: 8px; background: #fff; color: #405b4e; font-size: 13px; font-weight: 450; line-height: 1.6; }
+.comment-field select { padding-right: 5px; cursor: pointer; }
+.comment-field input:hover:not(:disabled), .comment-field select:hover:not(:disabled), .comment-field textarea:hover:not(:disabled) { border-color: #b2c9bd; }
+.comment-field input::placeholder, .comment-field textarea::placeholder { color: #9daaa2; font-weight: 400; }
+.comment-field [aria-invalid="true"] { border-color: #c7856e; background: #fffaf7; }
+.comment-field input:disabled, .comment-field select:disabled, .comment-field textarea:disabled { background: #f0f3f0; color: #9ba79f; cursor: not-allowed; opacity: .8; }
+.comment-content-field { margin-top: 15px; }
+.comment-content-field .note-area { margin-top: 0; min-height: 145px; padding: 11px 12px; background: #fbfcfa; color: #405b4e; font-size: 13px; font-weight: 400; line-height: 1.9; }
+.comment-form-meta { display: flex; align-items: flex-start; gap: 10px; margin-top: 7px; color: #8d9b92; font-size: 10px; line-height: 1.75; }
+.comment-form-meta #comment-length { flex: 0 0 auto; color: #7e9387; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.comment-public-note { flex: 1 1 auto; text-align: left; word-break: keep-all; }
+.comment-form-actions { display: flex; align-items: center; gap: 11px; margin-top: 14px; }
+.comment-form-actions .btn { flex: 0 0 auto; min-width: 86px; min-height: 40px; }
+.comment-form-status { color: #598571; font-size: 11px; line-height: 1.75; word-break: keep-all; }
+.comment-form-status:empty { display: none; }
+.comment-form-status[data-kind="error"], .comment-list-status[data-kind="error"] { color: #ae644b; }
+.comment-list-section { margin-top: 23px; padding-top: 19px; border-top: 1px solid #e1e9e4; }
+.comment-list-toolbar { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 9px; }
+.comment-list-toolbar > strong { color: #425f50; font-size: 13px; font-weight: 750; }
+.comment-list-toolbar > strong small { margin-left: 5px; color: #99a79d; font-size: 10px; font-weight: 400; }
+.comment-list-actions { display: flex; align-items: center; gap: 6px; }
+.comment-list-actions .btn { min-height: 30px; padding: 6px 9px; font-size: 10px; }
+.comment-list-status { margin-top: 9px; color: #84968a; font-size: 11px; line-height: 1.75; word-break: keep-all; }
+.comment-list-status:empty { display: none; }
+.comment-empty { margin-top: 13px; padding: 24px 17px; border: 1px dashed #d9e4dc; border-radius: 10px; background: #f9fbf8; color: #8a9b8f; font-size: 12px; line-height: 1.9; text-align: center; word-break: keep-all; }
+.comment-empty strong { color: #768d7c; font-weight: 650; }
+.comments-list { display: grid; gap: 11px; margin: 13px 0 0; padding: 0; list-style: none; }
+.comment-card { min-width: 0; padding: 14px 15px 13px; border: 1px solid #e1e9e3; border-radius: 11px; background: #fcfdfb; }
+.comment-card-header { display: flex; align-items: baseline; justify-content: space-between; flex-wrap: wrap; gap: 5px 12px; }
+.comment-author { min-width: 0; max-width: 100%; color: #486755; font-size: 12px; font-weight: 750; line-height: 1.65; overflow-wrap: anywhere; }
+.comment-time { flex: 0 1 auto; min-width: 0; max-width: 100%; color: #a0ada3; font-size: 10px; line-height: 1.65; font-variant-numeric: tabular-nums; white-space: normal; overflow-wrap: anywhere; }
+.comment-content { margin-top: 9px; color: #54695e; font-size: 13px; line-height: 1.9; white-space: pre-wrap; overflow-wrap: anywhere; word-break: normal; }
+.comment-context { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 11px; }
+.comment-context > span { max-width: 100%; padding: 3px 7px; border: 1px solid #e5ece6; border-radius: 5px; background: #f1f6f1; color: #829487; font-size: 10px; line-height: 1.6; font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+.comment-list-section > .full-width { margin-top: 13px; }
 .status-message { min-height: 18px; color: #4c8271; font-size: 11px; line-height: 1.7; }
 .status-message[data-kind="error"] { color: #a65843; }
 .notice { padding: 9px 12px; margin-top: 10px; background: #fff7e8; border: 1px solid #eedebf; border-radius: 8px; color: #997236; font-size: 11px; line-height: 1.75; }
@@ -555,6 +601,9 @@ textarea::placeholder { color: #a0aaa8; }
   .convergence-panel, .data-panel { padding: 19px; }
   .notes-grid { grid-template-columns: 1fr; margin-top: 18px; gap: 18px; }
   .notes-grid > .panel { padding: 21px; }
+  .comment-identity { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .comment-identity > .comment-field:last-child { grid-column: 1 / -1; }
+  .comment-field input, .comment-field select, .comment-content-field .note-area { font-size: 14px; }
   .question-list summary { font-size: 12px; }
   .question-list details p, .question-list details .answer { font-size: 11px; }
   .note-area, textarea.note-area { min-height: 150px; }
@@ -631,6 +680,15 @@ textarea::placeholder { color: #a0aaa8; }
   .metric-number.is-long { font-size: 18px; }
 }
 
+@container comments (max-width: 420px) {
+  .comment-identity { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .comment-identity > .comment-field:last-child { grid-column: 1 / -1; }
+  .comment-form-meta { flex-wrap: wrap; gap: 3px 10px; }
+  .comment-public-note { flex: 1 1 100%; margin-left: 0; text-align: left; }
+  .comment-form-actions { align-items: flex-start; }
+  .comment-card { padding: 13px; }
+}
+
 @media (prefers-reduced-motion: reduce) {
   html { scroll-behavior: auto; }
   *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
@@ -642,6 +700,7 @@ textarea::placeholder { color: #a0aaa8; }
   .page { width: 100%; padding: 12px 0; }
   .topbar { padding: 8px 0; min-height: 0; border-bottom: 1px solid #bbb; }
   .topbar .actions, .header-actions, .topbar-actions, .controls, .control-panel, .graph-toolbar .actions, .graph-actions, .section-header .btn, .note-actions, .footer, footer { display: none !important; }
+  .comment-form, .comment-storage, .comment-list-actions, .comment-list-section > .full-width { display: none !important; }
   .workspace, .below-grid, .notes-grid { grid-template-columns: 1fr; }
   .hero { margin-bottom: 15px; }
   .hero h1 { font-size: 25px; }
@@ -651,6 +710,7 @@ textarea::placeholder { color: #a0aaa8; }
   .data-scroll { max-height: none; overflow: visible; }
   th { position: static; }
   .notes-grid > .panel { break-inside: avoid; }
+  .comment-card { break-inside: avoid; }
   .note-area { border-color: #aaa; }
 }
 
@@ -804,7 +864,7 @@ textarea::placeholder { color: #a0aaa8; }
       </div>
     </section>
 
-    <section class="notes-grid" id="explore" aria-label="탐구 가이드와 관찰 메모">
+    <section class="notes-grid" id="explore" aria-label="탐구 가이드와 관찰 게시판">
       <div class="panel question-panel"><div class="section-header"><div><div class="section-kicker">관찰에서 설명으로</div><h2>이 질문을 따라가 보세요</h2></div></div>
         <div class="question-list">
           <details><summary>x²에서는 왜 대칭 기울기가 바뀌지 않을까요?</summary><p>(a+h)² − (a−h)² = 4ah이므로 S<sub>h</sub> = 2a입니다. h가 양수인 동안 항상 같은 값이에요. 하지만 할선 자체는 보통 A를 지나지 않으며, h를 줄이면 접선에 가까워집니다.</p></details>
@@ -813,11 +873,29 @@ textarea::placeholder { color: #a0aaa8; }
           <details><summary>구간별 함수의 원점에서는 무엇이 다를까요?</summary><p>f(x)=x (x&lt;0), f(x)=x² (x≥0)에서 a=0이면 왼쪽 기울기는 1, 오른쪽 기울기는 h, 대칭 기울기는 (1+h)/2입니다. 대칭 기울기는 0.5로 모이지만 좌우 극한은 1과 0이므로 미분 불가능합니다.</p></details>
         </div>
       </div>
-      <div class="panel note-panel"><div class="section-header"><div><div class="section-kicker">나의 발견</div><h2>관찰한 것을 남겨 보세요</h2></div><button class="btn btn-quiet btn-small" id="save-note" type="button">메모 저장</button></div>
-        <label for="experiment-note" class="note-label">어떤 함수를, 어떤 기준점에서 관찰했나요? 좌우 기울기와 대칭 기울기를 비교해 보세요.</label>
-        <textarea class="note-area" id="experiment-note" rows="7" maxlength="8000" placeholder="예: |x|의 원점에서 h를 줄여도 왼쪽은 −1, 오른쪽은 1이었다. 대칭 기울기만 보고 판단하면…"></textarea>
-        <p class="tiny-note" id="note-status" role="status">저장한 메모는 이 브라우저에만 남아요.</p>
-      </div>
+      <section class="panel note-panel comment-board" id="observation-board" aria-labelledby="comment-board-title">
+        <div class="section-header"><div><div class="section-kicker">나의 발견을 함께</div><h2 id="comment-board-title">관찰 게시판</h2></div><span class="comment-count" id="comment-count" aria-label="등록된 관찰 수">—</span></div>
+        <p class="comment-storage" id="comment-storage">게시판에 연결하는 중이에요.</p>
+        <form class="comment-form" id="comment-form">
+          <fieldset class="comment-fields" id="comment-fields" aria-label="관찰 등록 정보">
+            <div class="comment-identity">
+              <label class="comment-field" for="comment-grade"><span>학년</span><select id="comment-grade" name="grade" required><option value="">선택</option><option value="1">1학년</option><option value="2">2학년</option><option value="3">3학년</option><option value="4">4학년</option><option value="5">5학년</option><option value="6">6학년</option></select></label>
+              <label class="comment-field" for="comment-class"><span>반</span><input id="comment-class" name="classroom" type="number" min="1" max="99" step="1" inputmode="numeric" placeholder="반" required></label>
+              <label class="comment-field" for="comment-name"><span>이름</span><input id="comment-name" name="name" type="text" minlength="1" maxlength="30" autocomplete="off" placeholder="이름" required></label>
+            </div>
+            <label class="comment-field comment-content-field" for="experiment-note"><span>관찰 내용</span><textarea class="note-area" id="experiment-note" name="content" rows="5" minlength="1" maxlength="2000" required placeholder="예: |x|의 원점에서 h를 줄여도 왼쪽은 −1, 오른쪽은 1이었다. 대칭 기울기만 보고 판단하면…"></textarea></label>
+            <div class="comment-form-meta"><span class="comment-public-note">등록한 학년·반·이름과 내용은 이 게시판에 표시됩니다.</span><span id="comment-length" aria-label="입력한 관찰 내용 글자 수">0 / 2,000</span></div>
+          </fieldset>
+          <div class="comment-form-actions"><button class="btn btn-primary" id="comment-submit" type="submit">관찰 등록</button><p class="comment-form-status" id="comment-form-status" role="status" aria-live="polite"></p></div>
+        </form>
+        <div class="comment-list-section">
+          <div class="comment-list-toolbar"><strong>모두의 관찰 <small>최신순</small></strong><div class="comment-list-actions"><button class="btn btn-quiet btn-small" id="comments-refresh" type="button">새로고침</button><button class="btn btn-quiet btn-small" id="comments-export" type="button">CSV 저장</button></div></div>
+          <p class="comment-list-status" id="comment-list-status" role="status" aria-live="polite">관찰 목록을 불러오는 중이에요.</p>
+          <div class="comment-empty" id="comments-empty" hidden><strong>아직 등록된 관찰이 없어요.</strong><p>첫 번째 관찰을 남겨 보세요.</p></div>
+          <ol class="comments-list" id="comments-list" aria-label="등록된 관찰, 최신순"></ol>
+          <button class="btn btn-secondary full-width" id="comments-more" type="button" hidden>이전 관찰 더 보기</button>
+        </div>
+      </section>
     </section>
 
     <footer class="footer"><span>기울기 실험실 <span aria-hidden="true">·</span> 대칭 할선과 극한 탐구</span><span>그래프는 관찰의 도구, 결론은 수학적 설명으로.</span></footer>
@@ -1617,23 +1695,8 @@ textarea::placeholder { color: #a0aaa8; }
     say("현재 그래프를 확대해도 선명한 SVG 그림으로 저장합니다.");
   });
 
-  const noteKey = "secant-lab-observation-note-v1";
-  try {
-    const saved = window.localStorage.getItem(noteKey);
-    if (saved !== null) {
-      $("experiment-note").value = saved.slice(0, 8000);
-      $("note-status").textContent = "이 브라우저에 저장했던 메모를 불러왔어요.";
-    }
-  } catch (_) {
-    $("note-status").textContent = "이 브라우저에서는 저장 공간을 사용할 수 없어요. 메모를 따로 복사해 주세요.";
-  }
-  $("save-note").addEventListener("click", () => {
-    try {
-      window.localStorage.setItem(noteKey, $("experiment-note").value);
-      $("note-status").textContent = "이 브라우저에 메모를 저장했어요.";
-    } catch (_) {
-      $("note-status").textContent = "메모를 저장하지 못했어요. 내용을 따로 복사해 주세요.";
-    }
+  window.SecantExperiment = Object.freeze({
+    snapshot: () => ({ fn: state.fn, a: state.a, h: state.h })
   });
 
   fitView();
@@ -1641,13 +1704,980 @@ textarea::placeholder { color: #a0aaa8; }
 })();
 
 </script>
+  <script>
+/* Shared comments: hosted API, Streamlit component bridge, or explicit offline mode. */
+(() => {
+  "use strict";
+  const mode = window.SECANT_COMMENTS_MODE || (location.protocol === "file:" ? "offline" : "site");
+  let storageLabel = mode === "offline"
+    ? "이 HTML 파일의 기록은 이 기기에만 저장됩니다. 다른 기기와 공유하려면 웹앱을 이용해 주세요."
+    : "등록한 기록은 서버에 저장되며, 이 게시판의 다른 방문자도 볼 수 있어요.";
+  function uuid() {
+    if (typeof window.crypto.randomUUID === "function") return window.crypto.randomUUID();
+    // getRandomValues also works in an HTTP development iframe where
+    // randomUUID is unavailable; keep the RPC identifier a valid UUID v4.
+    const bytes = window.crypto.getRandomValues(new Uint8Array(16));
+    bytes[6] = (bytes[6] & 15) | 64;
+    bytes[8] = (bytes[8] & 63) | 128;
+    const hex = Array.from(bytes, (byte) => byte.toString(16).padStart(2, "0")).join("");
+    return `${hex.slice(0, 8)}-${hex.slice(8, 12)}-${hex.slice(12, 16)}-${hex.slice(16, 20)}-${hex.slice(20)}`;
+  }
+
+  async function api(path, options = {}) {
+    let response;
+    try {
+      response = await fetch(path, { cache: "no-store", credentials: "same-origin", ...options });
+    } catch (_) {
+      throw new Error("서버에 연결하지 못했어요. 인터넷 연결을 확인하고 다시 눌러 주세요.");
+    }
+    let result;
+    try { result = await response.json(); }
+    catch (_) { throw new Error("댓글 서버의 응답을 확인하지 못했어요. 잠시 후 다시 눌러 주세요."); }
+    if (!response.ok) throw new Error(result.error || "기록을 처리하지 못했어요. 다시 시도해 주세요.");
+    return result;
+  }
+
+  const pending = new Map();
+  let readyResolve;
+  let initialData = null;
+  let initialError = null;
+  let consumedInitial = false;
+  const ready = new Promise((resolve) => { readyResolve = resolve; });
+  let queue = Promise.resolve();
+
+  function post(type, payload) {
+    window.parent.postMessage({ isStreamlitMessage: true, type, ...payload }, "*");
+  }
+  function rpc(action, payload) {
+    const run = async () => {
+      await ready;
+      return new Promise((resolve, reject) => {
+        const request_id = uuid();
+        const timer = window.setTimeout(() => {
+          pending.delete(request_id);
+          reject(new Error("서버의 저장 응답이 늦어지고 있어요. 다시 등록해도 같은 글은 중복 저장되지 않아요."));
+        }, 25000);
+        pending.set(request_id, { resolve, reject, timer });
+        post("streamlit:setComponentValue", { dataType: "json", value: { request_id, action, payload } });
+      });
+    };
+    const next = queue.then(run, run);
+    queue = next.catch(() => {});
+    return next;
+  }
+
+  if (mode === "streamlit") {
+    let lastHeight = 0;
+    let frameRequested = false;
+    const resize = () => {
+      if (frameRequested) return;
+      frameRequested = true;
+      requestAnimationFrame(() => {
+        frameRequested = false;
+        const height = Math.ceil(document.body.getBoundingClientRect().height + 24);
+        if (height !== lastHeight) {
+          lastHeight = height;
+          post("streamlit:setFrameHeight", { height });
+        }
+      });
+    };
+    window.addEventListener("message", (event) => {
+      if (event.source !== window.parent || event.data?.type !== "streamlit:render") return;
+      const args = event.data.args || {};
+      if (args.storage_label) storageLabel = args.storage_label;
+      if (args.initial_data) initialData = args.initial_data;
+      initialError = typeof args.initial_error === "string" ? args.initial_error : null;
+      readyResolve();
+      const response = args.response;
+      const waiting = response && pending.get(response.request_id);
+      if (waiting) {
+        clearTimeout(waiting.timer);
+        pending.delete(response.request_id);
+        if (response.ok) waiting.resolve(response.result);
+        else waiting.reject(new Error(response.error || "저장하지 못했어요. 입력한 내용을 확인해 주세요."));
+      }
+      resize();
+    });
+    new ResizeObserver(resize).observe(document.body);
+    window.addEventListener("resize", resize);
+    post("streamlit:componentReady", { apiVersion: 1 });
+    resize();
+  }
+
+  const offlineKey = "secant-lab-comments-offline-v3";
+  function offlineRecords() {
+    try {
+      const data = JSON.parse(localStorage.getItem(offlineKey) || "[]");
+      if (!Array.isArray(data)) throw new Error();
+      return data;
+    } catch (_) {
+      throw new Error("이 기기의 저장 공간을 읽지 못했어요. 브라우저 저장 설정을 확인해 주세요.");
+    }
+  }
+
+  const transport = {
+    mode,
+    get storageLabel() { return storageLabel; },
+    async list({ before_id = null } = {}) {
+      if (mode === "streamlit") {
+        await ready;
+        if (!consumedInitial && before_id === null) {
+          consumedInitial = true;
+          if (initialError) throw new Error(initialError);
+          if (initialData) return initialData;
+        }
+        return rpc("list", { before_id });
+      }
+      if (mode === "offline") {
+        const all = offlineRecords().sort((a, b) => b.id - a.id);
+        const eligible = before_id === null ? all : all.filter((r) => r.id < before_id);
+        const comments = eligible.slice(0, 50);
+        return { comments, total: all.length, next_before_id: eligible.length > 50 ? comments.at(-1).id : null };
+      }
+      const query = before_id === null ? "" : `?before_id=${encodeURIComponent(before_id)}`;
+      return api(`/api/comments${query}`);
+    },
+    async create(payload) {
+      if (mode === "streamlit") return rpc("create", payload);
+      if (mode === "offline") {
+        const records = offlineRecords();
+        const existing = records.find((r) => r.request_id === payload.request_id);
+        if (existing) return { comment: existing, duplicate: true };
+        const comment = { ...payload, id: records.reduce((n, r) => Math.max(n, r.id), 0) + 1, created_at: new Date().toISOString() };
+        try { localStorage.setItem(offlineKey, JSON.stringify([...records, comment])); }
+        catch (_) { throw new Error("저장 공간이 부족해요. 기록을 CSV로 내려받은 뒤 저장 공간을 확인해 주세요."); }
+        return { comment, duplicate: false };
+      }
+      return api("/api/comments", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) });
+    },
+    async exportAll() {
+      if (mode === "streamlit") return rpc("export", {});
+      if (mode === "offline") return { comments: offlineRecords().sort((a, b) => b.id - a.id) };
+      return api("/api/comments/export");
+    }
+  };
+  window.CommentTransport = Object.freeze(transport);
+})();
+
+</script>
+  <script>
+/* Observation board UI. Storage and networking belong to CommentTransport. */
+(() => {
+  "use strict";
+
+  function start() {
+    const $ = (id) => document.getElementById(id);
+    const form = $("comment-form");
+    if (!form) return;
+    const fields = $("comment-fields");
+    const grade = $("comment-grade");
+    const classroom = $("comment-class");
+    const name = $("comment-name");
+    const content = $("experiment-note");
+    const submit = $("comment-submit");
+    const refresh = $("comments-refresh");
+    const more = $("comments-more");
+    const exporter = $("comments-export");
+    const transport = window.CommentTransport;
+    let comments = [];
+    let total = 0;
+    let nextBefore = null;
+    let loaded = false;
+    let loading = false;
+    let submitting = false;
+    let exporting = false;
+    let loadGeneration = 0;
+    let pendingSubmission = null;
+
+    function status(id, message, kind = "info") {
+      const node = $(id);
+      node.textContent = message;
+      node.dataset.kind = kind;
+    }
+
+    function countCharacters() {
+      $("comment-length").textContent = `${content.value.length.toLocaleString("ko-KR")} / 2,000`;
+    }
+
+    function syncStorageLabel() {
+      const mode = String(transport.mode || "");
+      const label = String(transport.storageLabel || "");
+      $("comment-storage").dataset.mode = mode;
+      $("comment-storage").textContent = mode === "offline"
+        ? `이 기기에만 저장됩니다.${label ? ` ${label}` : " 다른 기기와는 공유되지 않아요."}`
+        : label || "이 게시판에서 등록한 관찰을 함께 확인할 수 있어요.";
+    }
+
+    function syncButtons() {
+      fields.disabled = submitting;
+      submit.disabled = submitting;
+      submit.textContent = submitting ? "등록하는 중…" : "관찰 등록";
+      form.setAttribute("aria-busy", String(submitting));
+      refresh.disabled = loading || submitting;
+      more.disabled = loading || submitting;
+      more.hidden = nextBefore === null;
+      more.textContent = loading ? "불러오는 중…" : "이전 관찰 더 보기";
+      exporter.disabled = exporting || submitting;
+      exporter.textContent = exporting ? "CSV 준비 중…" : "CSV 저장";
+      $("comments-list").setAttribute("aria-busy", String(loading));
+    }
+
+    function createNode(tag, className, text) {
+      const node = document.createElement(tag);
+      if (className) node.className = className;
+      if (text !== undefined) node.textContent = String(text);
+      return node;
+    }
+
+    const seoulFormatter = new Intl.DateTimeFormat("ko-KR", {
+      timeZone: "Asia/Seoul", year: "numeric", month: "2-digit", day: "2-digit",
+      hour: "2-digit", minute: "2-digit", second: "2-digit", hourCycle: "h23"
+    });
+
+    function seoulTime(raw) {
+      const date = new Date(raw);
+      if (!Number.isFinite(date.getTime())) return "작성 시각 확인 불가";
+      const values = Object.fromEntries(seoulFormatter.formatToParts(date).map((part) => [part.type, part.value]));
+      return `${values.year}.${values.month}.${values.day} ${values.hour}:${values.minute}:${values.second}`;
+    }
+
+    function functionLabel(id) {
+      const entry = window.MathLab && Object.prototype.hasOwnProperty.call(window.MathLab.FUNCTIONS, id)
+        ? window.MathLab.FUNCTIONS[id] : null;
+      return entry ? entry.formula : String(id || "함수 정보 없음");
+    }
+
+    function numberLabel(value) {
+      return typeof value === "number" && Number.isFinite(value)
+        ? window.MathLab.formatNumber(value, 9) : "—";
+    }
+
+    function renderComment(comment) {
+      const card = createNode("li", "comment-card");
+      card.dataset.commentId = String(comment.id);
+      const header = createNode("div", "comment-card-header");
+      header.append(createNode("strong", "comment-author", `${comment.grade}학년 ${comment.classroom}반 ${comment.name}`));
+      const time = createNode("time", "comment-time", `${seoulTime(comment.created_at)} · 한국 시간`);
+      if (Number.isFinite(Date.parse(comment.created_at))) time.dateTime = comment.created_at;
+      header.append(time);
+      card.append(header, createNode("p", "comment-content", comment.content));
+      const context = createNode("div", "comment-context");
+      context.setAttribute("aria-label", "등록할 때의 실험 조건");
+      context.append(
+        createNode("span", "", functionLabel(comment.fn)),
+        createNode("span", "", `a = ${numberLabel(comment.a)}`),
+        createNode("span", "", `h = ${numberLabel(comment.h)}`)
+      );
+      card.append(context);
+      return card;
+    }
+
+    function renderList() {
+      const sorted = [...comments].sort((left, right) => Number(right.id) - Number(left.id));
+      $("comments-list").replaceChildren(...sorted.map(renderComment));
+      $("comment-count").textContent = loaded ? `${total.toLocaleString("ko-KR")}개` : "—";
+      $("comments-empty").hidden = !loaded || comments.length > 0 || total > 0;
+      syncButtons();
+    }
+
+    function uniqueComments(records) {
+      const byId = new Map();
+      records.forEach((comment) => {
+        if (!comment || !Number.isSafeInteger(Number(comment.id)) || Number(comment.id) <= 0 ||
+          typeof comment.content !== "string" || typeof comment.name !== "string") {
+          throw new Error("Invalid comment response");
+        }
+        byId.set(String(comment.id), comment);
+      });
+      return [...byId.values()];
+    }
+
+    async function loadComments(reset = true) {
+      if (!reset && (loading || nextBefore === null)) return false;
+      const generation = ++loadGeneration;
+      const before = reset ? null : nextBefore;
+      loading = true;
+      status("comment-list-status", reset ? "관찰 목록을 불러오는 중이에요." : "이전 관찰을 불러오는 중이에요.");
+      syncButtons();
+      try {
+        const page = await transport.list({ before_id: before });
+        if (generation !== loadGeneration) return false;
+        if (!page || !Array.isArray(page.comments) || !Number.isSafeInteger(Number(page.total)) || Number(page.total) < 0) {
+          throw new Error("Invalid list response");
+        }
+        const records = uniqueComments(reset ? page.comments : [...comments, ...page.comments]);
+        comments = records;
+        total = Number(page.total);
+        nextBefore = page.next_before_id == null ? null : Number(page.next_before_id);
+        if (!Number.isSafeInteger(nextBefore) || nextBefore <= 0) nextBefore = null;
+        loaded = true;
+        syncStorageLabel();
+        renderList();
+        status("comment-list-status", total === 0 ? "" : `${comments.length.toLocaleString("ko-KR")}개 표시 · 최신순`);
+        return true;
+      } catch (_) {
+        if (generation === loadGeneration) {
+          syncStorageLabel();
+          status("comment-list-status", "관찰 목록을 불러오지 못했어요. 새로고침을 눌러 다시 시도해 주세요.", "error");
+        }
+        return false;
+      } finally {
+        if (generation === loadGeneration) {
+          loading = false;
+          syncButtons();
+        }
+      }
+    }
+
+    function requestId() {
+      if (typeof window.crypto.randomUUID === "function") return window.crypto.randomUUID();
+      const bytes = window.crypto.getRandomValues(new Uint8Array(16));
+      bytes[6] = (bytes[6] & 15) | 64;
+      bytes[8] = (bytes[8] & 63) | 128;
+      const hex = Array.from(bytes, (b) => b.toString(16).padStart(2, "0")).join("");
+      return `${hex.slice(0, 8)}-${hex.slice(8, 12)}-${hex.slice(12, 16)}-${hex.slice(16, 20)}-${hex.slice(20)}`;
+    }
+
+    function readFields() {
+      const values = {
+        grade: Number(grade.value), classroom: Number(classroom.value),
+        name: name.value.trim(), content: content.value.trim()
+      };
+      grade.setCustomValidity(Number.isInteger(values.grade) && values.grade >= 1 && values.grade <= 6 ? "" : "학년을 선택해 주세요.");
+      classroom.setCustomValidity(Number.isInteger(values.classroom) && values.classroom >= 1 && values.classroom <= 99 ? "" : "반을 1부터 99까지의 정수로 입력해 주세요.");
+      name.setCustomValidity(values.name.length >= 1 && values.name.length <= 30 ? "" : "이름을 1자부터 30자까지 입력해 주세요.");
+      content.setCustomValidity(values.content.length >= 1 && values.content.length <= 2000 ? "" : "관찰 내용을 1자부터 2,000자까지 입력해 주세요.");
+      return form.reportValidity() ? values : null;
+    }
+
+    function experimentSnapshot() {
+      const snapshot = window.SecantExperiment && window.SecantExperiment.snapshot();
+      if (!snapshot || typeof snapshot.fn !== "string" || !Number.isFinite(snapshot.a) || !Number.isFinite(snapshot.h) || snapshot.h <= 0) {
+        throw new Error("Experiment state unavailable");
+      }
+      return { fn: snapshot.fn, a: snapshot.a, h: snapshot.h };
+    }
+
+    [grade, classroom, name, content].forEach((input) => {
+      input.addEventListener("input", () => {
+        input.setCustomValidity("");
+        pendingSubmission = null;
+        countCharacters();
+      });
+      input.addEventListener("change", () => {
+        input.setCustomValidity("");
+        pendingSubmission = null;
+      });
+    });
+
+    form.addEventListener("submit", async (event) => {
+      event.preventDefault();
+      if (submitting) return;
+      const values = readFields();
+      if (!values) return;
+      const fingerprint = JSON.stringify(values);
+      if (!pendingSubmission || pendingSubmission.fingerprint !== fingerprint) {
+        try {
+          pendingSubmission = {
+            fingerprint,
+            payload: { request_id: requestId(), ...values, ...experimentSnapshot() }
+          };
+        } catch (_) {
+          status("comment-form-status", "현재 실험 정보를 확인하지 못했어요. 입력한 내용은 그대로 두고 잠시 후 다시 시도해 주세요.", "error");
+          return;
+        }
+      }
+      submitting = true;
+      syncButtons();
+      status("comment-form-status", "관찰을 등록하는 중이에요.");
+      try {
+        const result = await transport.create(pendingSubmission.payload);
+        if (!result || !result.comment) throw new Error("Invalid create response");
+        const nextComments = uniqueComments([result.comment, ...comments]);
+        const wasPresent = comments.some((comment) => String(comment.id) === String(result.comment.id));
+        comments = nextComments;
+        total = Math.max(comments.length, total + (wasPresent || result.duplicate ? 0 : 1));
+        loaded = true;
+        pendingSubmission = null;
+        form.reset();
+        [grade, classroom, name, content].forEach((input) => input.setCustomValidity(""));
+        countCharacters();
+        syncStorageLabel();
+        renderList();
+        status("comment-form-status", result.duplicate ? "이미 등록된 관찰을 확인했어요. 입력란을 비웠어요." : "관찰을 등록했어요. 다음 사람을 위해 입력란을 비웠어요.", "success");
+        await loadComments(true);
+      } catch (_) {
+        status("comment-form-status", "등록을 확인하지 못했어요. 입력한 내용은 그대로 남아 있으니 다시 등록해 주세요.", "error");
+      } finally {
+        submitting = false;
+        syncButtons();
+      }
+    });
+
+    function csvCell(value) {
+      let text = value == null ? "" : String(value);
+      // Keep student-entered text as text when opened in spreadsheet apps.
+      if (typeof value !== "number" && /^[\s]*[=+\-@]/u.test(text)) text = "'" + text;
+      return `"${text.replaceAll('"', '""')}"`;
+    }
+
+    function downloadCSV(records) {
+      const header = ["번호", "작성 시각 (한국 시간)", "작성 시각 (UTC)", "학년", "반", "이름", "관찰 내용", "함수", "기준점 a", "거리 h"];
+      const rows = records.map((comment) => [
+        Number(comment.id), seoulTime(comment.created_at), comment.created_at,
+        Number(comment.grade), Number(comment.classroom), comment.name, comment.content,
+        functionLabel(comment.fn), comment.a, comment.h
+      ]);
+      const csv = "\uFEFF" + [header, ...rows].map((row) => row.map(csvCell).join(",")).join("\r\n");
+      const url = URL.createObjectURL(new Blob([csv], { type: "text/csv;charset=utf-8" }));
+      const link = createNode("a", "");
+      link.href = url;
+      link.download = `secant-observations-${seoulTime(new Date().toISOString()).slice(0, 10).replaceAll(".", "-")}.csv`;
+      link.style.display = "none";
+      document.body.append(link);
+      link.click();
+      link.remove();
+      window.setTimeout(() => URL.revokeObjectURL(url), 1500);
+    }
+
+    refresh.addEventListener("click", () => loadComments(true));
+    more.addEventListener("click", () => loadComments(false));
+    exporter.addEventListener("click", async () => {
+      if (exporting) return;
+      exporting = true;
+      syncButtons();
+      status("comment-list-status", "전체 관찰을 CSV로 준비하는 중이에요.");
+      try {
+        const result = await transport.exportAll();
+        if (!result || !Array.isArray(result.comments)) throw new Error("Invalid export response");
+        const records = uniqueComments(result.comments).sort((left, right) => Number(right.id) - Number(left.id));
+        syncStorageLabel();
+        if (records.length === 0) status("comment-list-status", "저장할 관찰이 아직 없어요.");
+        else {
+          downloadCSV(records);
+          status("comment-list-status", `${records.length.toLocaleString("ko-KR")}개의 관찰을 CSV로 저장했어요.`, "success");
+        }
+      } catch (_) {
+        status("comment-list-status", "CSV를 준비하지 못했어요. 잠시 후 다시 시도해 주세요.", "error");
+      } finally {
+        exporting = false;
+        syncButtons();
+      }
+    });
+
+    countCharacters();
+    if (!transport || !["list", "create", "exportAll"].every((key) => typeof transport[key] === "function")) {
+      fields.disabled = true;
+      submit.disabled = true;
+      refresh.disabled = true;
+      exporter.disabled = true;
+      status("comment-storage", "게시판 연결을 확인하지 못했어요. 페이지를 새로고침해 주세요.", "error");
+      status("comment-list-status", "관찰 목록을 불러올 수 없어요.", "error");
+      return;
+    }
+    // No automatic submission or migration of old private browser notes.
+    loadComments(true);
+  }
+
+  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", start, { once: true });
+  else start();
+})();
+
+</script>
 </body>
 </html>
 """
 
-if hasattr(st, "iframe"):
-    st.iframe(HTML, height="content", alt="점을 직접 움직이는 대칭 할선과 미분계수 실험실")
-else:
-    # Compatibility with older Streamlit installations.
-    import streamlit.components.v1 as components
-    components.html(HTML, height=1800, scrolling=True)
+
+
+"""Shared comment storage; standard library only, suitable for inlining in app.py."""
+import contextlib
+import datetime
+import json
+import math
+from pathlib import Path
+import sqlite3
+import urllib.error
+import urllib.parse
+import urllib.request
+import uuid
+
+
+COMMENT_PAGE_SIZE = 50
+COMMENT_FIELDS = ("request_id", "grade", "classroom", "name", "content", "fn", "a", "h")
+COMMENT_COLUMNS = "id," + ",".join(COMMENT_FIELDS) + ",created_at"
+COMMENT_FUNCTIONS = {"quadratic", "cubic", "absolute", "piecewise"}
+
+
+class CommentError(Exception):
+    """Only this deliberately public message may be sent to the browser."""
+    def __init__(self, message):
+        self.public_message = message
+        super().__init__(message)
+
+
+class CommentValidationError(CommentError):
+    pass
+
+
+class CommentConflictError(CommentError):
+    pass
+
+
+class CommentStorageError(CommentError):
+    pass
+
+
+def _comment_uuid(value):
+    if not isinstance(value, str):
+        raise CommentValidationError("요청 번호가 올바르지 않습니다. 다시 시도해 주세요.")
+    try:
+        return str(uuid.UUID(value.strip()))
+    except (ValueError, AttributeError):
+        raise CommentValidationError("요청 번호가 올바르지 않습니다. 다시 시도해 주세요.") from None
+
+
+def _comment_integer(value, minimum, maximum, label):
+    if type(value) is not int or not minimum <= value <= maximum:
+        raise CommentValidationError(f"{label}은 {minimum}부터 {maximum} 사이의 정수로 입력해 주세요.")
+    return value
+
+
+def _comment_text(value, maximum, label):
+    if not isinstance(value, str):
+        raise CommentValidationError(f"{label}을 입력해 주세요.")
+    value = value.strip()
+    if not value or len(value) > maximum or "\x00" in value:
+        raise CommentValidationError(f"{label}은 공백을 제외하고 1~{maximum}자 이내로 입력해 주세요.")
+    return value
+
+
+def _comment_number(value, minimum, maximum, label):
+    if isinstance(value, bool) or not isinstance(value, (int, float)):
+        raise CommentValidationError(f"{label} 값이 올바르지 않습니다.")
+    try:
+        value = float(value)
+    except (OverflowError, ValueError):
+        raise CommentValidationError(f"{label} 값이 올바르지 않습니다.") from None
+    if not math.isfinite(value) or not minimum <= value <= maximum:
+        raise CommentValidationError(f"{label} 값이 허용 범위를 벗어났습니다.")
+    return 0.0 if value == 0 else value
+
+
+def validate_comment(payload):
+    if not isinstance(payload, dict):
+        raise CommentValidationError("댓글 입력 형식이 올바르지 않습니다.")
+    fn = payload.get("fn")
+    if not isinstance(fn, str) or fn not in COMMENT_FUNCTIONS:
+        raise CommentValidationError("탐구할 함수를 먼저 선택해 주세요.")
+    # Client-controlled id/created_at and unknown fields are never inserted.
+    return {
+        "request_id": _comment_uuid(payload.get("request_id")),
+        "grade": _comment_integer(payload.get("grade"), 1, 6, "학년"),
+        "classroom": _comment_integer(payload.get("classroom"), 1, 99, "반"),
+        "name": _comment_text(payload.get("name"), 30, "이름"),
+        "content": _comment_text(payload.get("content"), 2000, "댓글"),
+        "fn": fn,
+        "a": _comment_number(payload.get("a"), -3, 3, "기준점 a"),
+        "h": _comment_number(payload.get("h"), 1e-6, 2, "거리 h"),
+    }
+
+
+def _comment_cursor(before_id):
+    if before_id is None:
+        return None
+    return _comment_integer(before_id, 1, 9223372036854775807, "이전 댓글 번호")
+
+
+def _public_comment(row):
+    try:
+        row = dict(row)
+        stamp = datetime.datetime.fromisoformat(str(row["created_at"]).replace("Z", "+00:00"))
+        if stamp.tzinfo is None:
+            raise ValueError("Missing timezone")
+        return {
+            "id": int(row["id"]),
+            "request_id": str(row["request_id"]),
+            "grade": int(row["grade"]),
+            "classroom": int(row["classroom"]),
+            "name": str(row["name"]),
+            "content": str(row["content"]),
+            "fn": str(row["fn"]),
+            "a": float(row["a"]),
+            "h": float(row["h"]),
+            "created_at": stamp.astimezone(datetime.timezone.utc).isoformat().replace("+00:00", "Z"),
+        }
+    except (KeyError, TypeError, ValueError, OverflowError):
+        raise CommentStorageError("저장된 댓글을 읽을 수 없습니다. 관리자에게 문의해 주세요.") from None
+
+
+def _duplicate_comment(existing, payload):
+    if any(existing[field] != payload[field] for field in COMMENT_FIELDS):
+        raise CommentConflictError("이미 사용한 요청 번호에 다른 내용이 담겨 있습니다. 새 댓글로 다시 등록해 주세요.")
+    return {"comment": existing, "duplicate": True}
+
+
+_COMMENT_SQLITE_SCHEMA = """
+CREATE TABLE IF NOT EXISTS observation_comments (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    request_id TEXT NOT NULL UNIQUE,
+    grade INTEGER NOT NULL CHECK (grade BETWEEN 1 AND 6),
+    classroom INTEGER NOT NULL CHECK (classroom BETWEEN 1 AND 99),
+    name TEXT NOT NULL CHECK (length(trim(name)) BETWEEN 1 AND 30),
+    content TEXT NOT NULL CHECK (length(trim(content)) BETWEEN 1 AND 2000),
+    fn TEXT NOT NULL CHECK (fn IN ('quadratic','cubic','absolute','piecewise')),
+    a REAL NOT NULL CHECK (a BETWEEN -3 AND 3),
+    h REAL NOT NULL CHECK (h BETWEEN 0.000001 AND 2),
+    created_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now'))
+);
+"""
+
+
+class CommentStore:
+    """A single shared SQLite file; each operation owns a short connection."""
+    def __init__(self, db_path, timeout=10.0):
+        try:
+            self.db_path = Path(db_path).resolve()
+            self.timeout = float(timeout)
+            self.db_path.parent.mkdir(parents=True, exist_ok=True)
+            with contextlib.closing(self._connect()) as connection:
+                connection.execute("PRAGMA journal_mode=WAL")
+                connection.executescript(_COMMENT_SQLITE_SCHEMA)
+        except (OSError, sqlite3.Error, TypeError, ValueError):
+            raise CommentStorageError("댓글 저장소를 준비하지 못했습니다. 관리자에게 문의해 주세요.") from None
+
+    def _connect(self):
+        connection = sqlite3.connect(str(self.db_path), timeout=self.timeout, isolation_level=None)
+        connection.row_factory = sqlite3.Row
+        return connection
+
+    def create(self, payload):
+        data = validate_comment(payload)
+        try:
+            with contextlib.closing(self._connect()) as connection:
+                # Serialize duplicate-check + insert across threads/processes.
+                connection.execute("BEGIN IMMEDIATE")
+                try:
+                    row = connection.execute(
+                        f"SELECT {COMMENT_COLUMNS} FROM observation_comments WHERE request_id = ?",
+                        (data["request_id"],),
+                    ).fetchone()
+                    if row is not None:
+                        result = _duplicate_comment(_public_comment(row), data)
+                    else:
+                        cursor = connection.execute(
+                            "INSERT INTO observation_comments (request_id,grade,classroom,name,content,fn,a,h) "
+                            "VALUES (?,?,?,?,?,?,?,?)", tuple(data[field] for field in COMMENT_FIELDS),
+                        )
+                        row = connection.execute(
+                            f"SELECT {COMMENT_COLUMNS} FROM observation_comments WHERE id = ?", (cursor.lastrowid,),
+                        ).fetchone()
+                        result = {"comment": _public_comment(row), "duplicate": False}
+                    connection.commit()
+                    return result
+                except Exception:
+                    connection.rollback()
+                    raise
+        except sqlite3.Error:
+            raise CommentStorageError("댓글을 저장하지 못했습니다. 잠시 후 다시 시도해 주세요.") from None
+
+    def list(self, before_id=None):
+        before_id = _comment_cursor(before_id)
+        try:
+            with contextlib.closing(self._connect()) as connection:
+                connection.execute("BEGIN")
+                total = connection.execute("SELECT count(*) FROM observation_comments").fetchone()[0]
+                condition = " WHERE id < ?" if before_id is not None else ""
+                parameters = (before_id, COMMENT_PAGE_SIZE + 1) if before_id is not None else (COMMENT_PAGE_SIZE + 1,)
+                rows = connection.execute(
+                    f"SELECT {COMMENT_COLUMNS} FROM observation_comments{condition} ORDER BY id DESC LIMIT ?", parameters,
+                ).fetchall()
+                connection.commit()
+            comments = [_public_comment(row) for row in rows[:COMMENT_PAGE_SIZE]]
+            return {
+                "comments": comments,
+                "total": total,
+                "next_before_id": comments[-1]["id"] if len(rows) > COMMENT_PAGE_SIZE else None,
+            }
+        except sqlite3.Error:
+            raise CommentStorageError("댓글 목록을 읽지 못했습니다. 잠시 후 다시 시도해 주세요.") from None
+
+    def export_all(self):
+        try:
+            with contextlib.closing(self._connect()) as connection:
+                rows = connection.execute(f"SELECT {COMMENT_COLUMNS} FROM observation_comments ORDER BY id DESC").fetchall()
+            return {"comments": [_public_comment(row) for row in rows]}
+        except sqlite3.Error:
+            raise CommentStorageError("댓글을 내려받지 못했습니다. 잠시 후 다시 시도해 주세요.") from None
+
+
+class _CommentRemoteConflict(Exception):
+    pass
+
+
+class SupabaseCommentStore:
+    """Server-only REST adapter. It never falls back to a different database."""
+    def __init__(self, supabase_url, service_role_key, timeout=10.0, opener=None):
+        if not isinstance(supabase_url, str) or not isinstance(service_role_key, str):
+            raise CommentStorageError("외부 댓글 저장소 설정을 확인해 주세요.")
+        try:
+            parsed = urllib.parse.urlsplit(supabase_url.strip())
+        except ValueError:
+            raise CommentStorageError("외부 댓글 저장소 설정을 확인해 주세요.") from None
+        if (parsed.scheme != "https" or not parsed.netloc or parsed.username or parsed.password
+                or parsed.query or parsed.fragment or parsed.path not in ("", "/") or not service_role_key.strip()):
+            raise CommentStorageError("외부 댓글 저장소 설정을 확인해 주세요.")
+        self._url = supabase_url.strip().rstrip("/") + "/rest/v1/observation_comments"
+        self._key = service_role_key.strip()
+        self._timeout = float(timeout)
+        self._opener = opener or urllib.request.urlopen
+
+    def _request(self, method="GET", parameters=(), body=None, prefer="count=exact"):
+        url = self._url + ("?" + urllib.parse.urlencode(parameters) if parameters else "")
+        headers = {"apikey": self._key, "Accept": "application/json", "Prefer": prefer}
+        # Legacy service_role keys are JWTs. New sb_secret keys use apikey
+        # alone; sending a non-JWT secret in Authorization would be invalid.
+        if not self._key.startswith("sb_secret_"):
+            headers["Authorization"] = "Bearer " + self._key
+        encoded = None
+        if body is not None:
+            headers["Content-Type"] = "application/json"
+            encoded = json.dumps(body, ensure_ascii=False, allow_nan=False).encode("utf-8")
+        request = urllib.request.Request(url, data=encoded, headers=headers, method=method)
+        try:
+            with self._opener(request, timeout=self._timeout) as response:
+                content = response.read(2_000_001)
+                if len(content) > 2_000_000:
+                    raise CommentStorageError("댓글 저장소의 응답을 처리하지 못했습니다.")
+                return json.loads(content.decode("utf-8")) if content else None, response.headers
+        except urllib.error.HTTPError as error:
+            status = error.code
+            error.close()
+            if status == 409 and method == "POST":
+                raise _CommentRemoteConflict() from None
+            raise CommentStorageError("외부 댓글 저장소에 연결하지 못했습니다. 관리자에게 문의해 주세요.") from None
+        except (urllib.error.URLError, OSError, TimeoutError, ValueError, UnicodeError):
+            raise CommentStorageError("외부 댓글 저장소에 연결하지 못했습니다. 잠시 후 다시 시도해 주세요.") from None
+
+    @staticmethod
+    def _count(headers):
+        value = next((str(v) for k, v in headers.items() if k.lower() == "content-range"), "")
+        count = value.rsplit("/", 1)[-1].strip()
+        if not count.isdigit():
+            raise CommentStorageError("댓글 수를 확인하지 못했습니다. 관리자에게 문의해 주세요.")
+        return int(count)
+
+    @staticmethod
+    def _rows(value):
+        if not isinstance(value, list):
+            raise CommentStorageError("댓글 저장소의 응답을 처리하지 못했습니다.")
+        return [_public_comment(row) for row in value]
+
+    def create(self, payload):
+        data = validate_comment(payload)
+        try:
+            value, _ = self._request("POST", body=data, prefer="return=representation")
+        except _CommentRemoteConflict:
+            value, _ = self._request(parameters=(("select", COMMENT_COLUMNS), ("request_id", "eq." + data["request_id"]), ("limit", 1)))
+            rows = self._rows(value)
+            if len(rows) != 1:
+                raise CommentStorageError("댓글 저장 결과를 확인하지 못했습니다. 같은 내용으로 다시 시도해 주세요.")
+            return _duplicate_comment(rows[0], data)
+        rows = self._rows(value)
+        if len(rows) != 1:
+            raise CommentStorageError("댓글 저장 결과를 확인하지 못했습니다. 같은 내용으로 다시 시도해 주세요.")
+        return {"comment": rows[0], "duplicate": False}
+
+    def list(self, before_id=None):
+        before_id = _comment_cursor(before_id)
+        parameters = [("select", COMMENT_COLUMNS), ("order", "id.desc"), ("limit", COMMENT_PAGE_SIZE)]
+        if before_id is not None:
+            parameters.append(("id", "lt." + str(before_id)))
+        value, headers = self._request(parameters=parameters)
+        comments = self._rows(value)
+        remaining = self._count(headers)
+        total = remaining
+        if before_id is not None:
+            _, total_headers = self._request(parameters=(("select", "id"), ("limit", 1)))
+            total = self._count(total_headers)
+        return {
+            "comments": comments,
+            "total": total,
+            "next_before_id": comments[-1]["id"] if comments and remaining > len(comments) else None,
+        }
+
+    def export_all(self):
+        comments = []
+        before_id = None
+        while True:
+            parameters = [("select", COMMENT_COLUMNS), ("order", "id.desc"), ("limit", COMMENT_PAGE_SIZE)]
+            if before_id is not None:
+                parameters.append(("id", "lt." + str(before_id)))
+            value, _ = self._request(parameters=parameters)
+            rows = self._rows(value)
+            if not rows:
+                return {"comments": comments}
+            next_id = rows[-1]["id"]
+            if before_id is not None and next_id >= before_id:
+                raise CommentStorageError("댓글 전체 목록을 읽지 못했습니다. 다시 시도해 주세요.")
+            comments.extend(rows)
+            before_id = next_id
+
+
+
+"""Streamlit bridge, inlined after comments_store.py; no server-package imports."""
+import hashlib
+import os
+import tempfile
+from pathlib import Path
+import streamlit as st
+import streamlit.components.v1 as components
+from streamlit.errors import StreamlitSecretNotFoundError
+
+
+@st.cache_resource(show_spinner=False)
+def _comment_component(html):
+    digest = hashlib.sha256(html.encode("utf-8")).hexdigest()
+    directory = Path(tempfile.gettempdir()) / "secant-lab-components" / digest
+    directory.mkdir(parents=True, exist_ok=True)
+    target = directory / "index.html"
+    if not target.exists():
+        temporary = directory / ("index-" + uuid.uuid4().hex + ".tmp")
+        temporary.write_text(html, encoding="utf-8")
+        os.replace(temporary, target)
+    return components.declare_component("secant_lab_shared_board", path=str(directory))
+
+
+@st.cache_resource(show_spinner=False)
+def _comment_store_resource(backend, location, credential):
+    if backend == "supabase":
+        return SupabaseCommentStore(location, credential)
+    return CommentStore(location)
+
+
+def _configured_comment_store():
+    try:
+        configuration = st.secrets.get("comments", {})
+    except (StreamlitSecretNotFoundError, FileNotFoundError):
+        configuration = {}
+    if not hasattr(configuration, "get"):
+        raise CommentStorageError("댓글 저장소 설정을 확인해 주세요.")
+    url = configuration.get("supabase_url")
+    key = configuration.get("service_role_key")
+    if url is not None or key is not None:
+        if not isinstance(url, str) or not url.strip() or not isinstance(key, str) or not key.strip():
+            raise CommentStorageError("외부 댓글 저장소 주소와 서버 키를 모두 설정해 주세요.")
+        store = _comment_store_resource("supabase", url.strip(), key.strip())
+        identity = "supabase:" + hashlib.sha256(url.strip().encode()).hexdigest()
+        return store, "공유 서버 저장 · 외부 데이터베이스", identity
+    app_file = globals().get("__file__", str(Path.cwd() / "app.py"))
+    location = os.environ.get("SECANT_COMMENTS_DB") or str(Path(app_file).resolve().parent / ".data" / "observation_comments.sqlite3")
+    location = str(Path(location).resolve())
+    return _comment_store_resource("sqlite", location, ""), "공유 서버 저장 · 재배포 시 보존이 보장되지 않음", "sqlite:" + location
+
+
+def _comment_rpc(store, event):
+    """The RPC UUID and the create payload's persistent UUID are separate."""
+    if not isinstance(event, dict):
+        raise CommentValidationError("댓글 요청 형식이 올바르지 않습니다.")
+    _comment_uuid(event.get("request_id"))
+    action = event.get("action")
+    payload = event.get("payload", {})
+    if not isinstance(payload, dict):
+        raise CommentValidationError("댓글 요청 형식이 올바르지 않습니다.")
+    if action == "create":
+        return store.create(payload)
+    if action == "list":
+        return store.list(before_id=payload.get("before_id"))
+    if action == "export":
+        return store.export_all()
+    raise CommentValidationError("지원하지 않는 댓글 요청입니다.")
+
+
+def run_comment_lab(HTML):
+    """Render the stable component and acknowledge each request only once."""
+    try:
+        component = _comment_component(HTML)
+    except Exception:
+        st.error("체험 화면을 준비하지 못했습니다. 잠시 후 새로고침해 주세요.")
+        return
+    store = None
+    startup_error = None
+    storage_label = "댓글 저장소 연결 확인 필요"
+    identity = "unavailable"
+    try:
+        store, storage_label, identity = _configured_comment_store()
+    except CommentError as error:
+        startup_error = error.public_message
+    except Exception:
+        startup_error = "댓글 저장소 설정을 읽지 못했습니다. 관리자에게 문의해 주세요."
+
+    if st.session_state.get("_secant_comments_identity") != identity:
+        st.session_state["_secant_comments_identity"] = identity
+        st.session_state["_secant_comments_responses"] = {}
+        st.session_state["_secant_comments_response"] = None
+        st.session_state.pop("_secant_comments_initial", None)
+    initial_data = st.session_state.get("_secant_comments_initial")
+    if initial_data is None:
+        if store is not None:
+            try:
+                initial_data = store.list()
+                st.session_state["_secant_comments_initial"] = initial_data
+            except CommentError as error:
+                startup_error = error.public_message
+            except Exception:
+                startup_error = "댓글 목록을 읽지 못했습니다. 잠시 후 다시 시도해 주세요."
+    if startup_error:
+        st.error(startup_error)
+
+    response = st.session_state.get("_secant_comments_response")
+    event = component(
+        initial_data=initial_data,
+        initial_error=startup_error,
+        response=response,
+        storage_label=storage_label,
+        key="secant_lab_shared_board_v3",
+        default=None,
+    )
+    if event is None:
+        return
+    raw_id = event.get("request_id") if isinstance(event, dict) else None
+    # Keep correlation identifiers bounded; never stringify a whole request.
+    request_id = raw_id if isinstance(raw_id, str) and len(raw_id) <= 64 else None
+    cache_key = request_id or "invalid-request"
+    cache = st.session_state["_secant_comments_responses"]
+    if cache_key in cache:
+        if response != cache[cache_key]:
+            st.session_state["_secant_comments_response"] = cache[cache_key]
+            st.rerun()
+        return
+
+    answer = {"request_id": request_id, "ok": False, "result": None, "error": None}
+    try:
+        if store is None or startup_error:
+            raise CommentStorageError(startup_error or "댓글 저장소에 연결하지 못했습니다.")
+        answer["result"] = _comment_rpc(store, event)
+        answer["ok"] = True
+        if event.get("action") == "list" and event.get("payload", {}).get("before_id") is None:
+            st.session_state["_secant_comments_initial"] = answer["result"]
+        elif event.get("action") == "create":
+            # A later iframe reload should start with the current board.
+            # A failed list refresh must not turn a committed write into a failure.
+            try:
+                st.session_state["_secant_comments_initial"] = store.list()
+            except Exception:
+                st.session_state.pop("_secant_comments_initial", None)
+    except CommentError as error:
+        answer["error"] = error.public_message
+    except Exception:
+        answer["error"] = "댓글 요청을 처리하지 못했습니다. 잠시 후 다시 시도해 주세요."
+    cache[cache_key] = answer
+    # Recent acknowledgements cover reruns/retries without retaining unbounded
+    # copies of every list/export response in each student's session.
+    while len(cache) > 8:
+        del cache[next(iter(cache))]
+    st.session_state["_secant_comments_response"] = answer
+    st.rerun()
+
+
+run_comment_lab(HTML)
